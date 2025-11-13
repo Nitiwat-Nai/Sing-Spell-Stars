@@ -3,51 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Melody Mind Match: Jingle Bells</title>
+    <title>Melody Mind Match: Jingle Bells (Scrolling)</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             min-height: 100vh;
-            background-color: #1a1a2e; /* Dark background for karaoke feel */
+            background-color: #1a1a2e;
             color: #ffffff;
             text-align: center;
+            margin: 0;
+            padding: 0;
         }
-        h1 {
-            color: #ffeb3b;
-        }
+        h1 { color: #ffeb3b; margin-bottom: 10px; }
         button#playButton {
-            padding: 15px 30px;
-            font-size: 1.2em;
+            padding: 12px 25px;
+            font-size: 1.1em;
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             transition: background-color 0.3s;
         }
-        button:hover:not(:disabled) {
-            background-color: #45a049;
-        }
-        #lyrics-container {
-            margin-top: 30px;
-            padding: 20px;
+        #score-display { font-size: 1.4em; color: #2196F3; margin-top: 10px; }
+        
+        /* --- 1. Karaoke Window Container --- */
+        #karaoke-window {
+            width: 90%;
+            max-width: 900px;
+            height: 250px; /* จำกัดความสูงให้แสดงเพียง 5-6 บรรทัด */
+            overflow: hidden; /* ซ่อนเนื้อเพลงที่เกินขอบเขต */
+            margin: 20px 0;
             background-color: #313154;
             border-radius: 10px;
-            width: 85%;
-            max-width: 800px;
-            min-height: 150px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+            position: relative;
         }
+        
+        /* --- 2. Inner Lyrics Container for Scrolling --- */
+        #lyrics-container {
+            width: 100%;
+            /* เราจะควบคุมตำแหน่งนี้ด้วย JavaScript เพื่อทำ Scrolling */
+            transition: transform 0.3s ease-out; 
+            padding-top: 50px; /* เพื่อให้บรรทัดแรกเริ่มที่ตรงกลางๆ */
+        }
+        
         .lyric-line {
             font-size: 1.8em;
             font-weight: bold;
-            margin-bottom: 10px;
-            line-height: 1.4;
+            line-height: 1.6;
+            padding: 5px 20px;
+            transition: opacity 0.3s;
+        }
+        .current-line {
+            color: #ffffff;
+            opacity: 1;
+        }
+        .non-current-line {
+            color: #aaaaaa;
+            opacity: 0.6;
         }
         .word {
             transition: color 0.1s;
@@ -60,78 +77,45 @@
             text-shadow: 0 0 10px rgba(255, 235, 59, 0.7);
         }
         .guess-word {
-            color: #ff4081; /* Pink for word to guess */
-            border-bottom: 3px dashed #ff4081; /* ขีดเส้นใต้สำหรับคำเดา */
+            color: #ff4081; 
+            border-bottom: 3px dashed #ff4081; 
             cursor: help;
         }
-        #status {
-            margin-top: 20px;
-            font-size: 1.1em;
-        }
-        #score-display {
-            font-size: 1.5em;
-            color: #2196F3;
-            margin-top: 10px;
-        }
+
+        /* --- 3. Choices Container --- */
         #choices-container {
-            min-height: 50px;
+            width: 90%;
+            max-width: 600px;
+            min-height: 60px;
+            display: flex; /* ใช้ Flexbox จัดเรียงปุ่ม */
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
         }
         .choice-button {
-            padding: 10px 20px;
-            font-size: 1em;
-            margin: 5px;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            margin: 0 15px;
             background-color: #FFC107;
             color: #333;
             border: none;
-            border-radius: 5px;
+            border-radius: 50px; /* ปุ่มโค้งมน */
             cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            display: none; /* ซ่อนไว้ก่อน */
+            min-width: 120px;
         }
-        .choice-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .choice-button.active {
+            display: inline-block;
         }
-        #summary-modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.8);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 600px;
-            color: #333;
-            border-radius: 10px;
-        }
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        .close:hover,
-        .close:focus {
-            color: #000;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .summary-item {
-            padding: 5px 0;
-            border-bottom: 1px dotted #ccc;
-            text-align: left;
-        }
-        .summary-item .status {
-            font-weight: bold;
-            margin-right: 10px;
-        }
+        .choice-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Summary Modal (ใช้ CSS เดิม) */
+        #summary-modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; color: #333; border-radius: 10px; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .summary-item { padding: 5px 0; border-bottom: 1px dotted #ccc; text-align: left; }
+        .summary-item .status { font-weight: bold; margin-right: 10px; }
         .correct-ans { color: #4CAF50; }
         .wrong-ans { color: #F44336; }
     </style>
@@ -143,8 +127,10 @@
     
     <div id="score-display">คะแนน: 0</div>
     
-    <div id="lyrics-container">
-        </div>
+    <div id="karaoke-window">
+        <div id="lyrics-container">
+            </div>
+    </div>
     
     <div id="choices-container">
         </div>
@@ -155,8 +141,7 @@
       <div class="modal-content">
         <span class="close">&times;</span>
         <h2>📜 สรุปคำศัพท์ที่เล่นไป</h2>
-        <div id="summary-list">
-          </div>
+        <div id="summary-list"></div>
         <p style="margin-top: 15px;">**คะแนนสุดท้าย:** <span id="final-score" style="font-size: 1.2em; font-weight: bold;"></span></p>
       </div>
     </div>
@@ -167,59 +152,60 @@
         // ----------------------------------------------------
         let audioContext;
         let isPlaying = false;
-        const tempo = 120; // 120 BPM
+        const tempo = 120; 
         const secondsPerBeat = 60 / tempo;
         let score = 0;
-        let currentGapIndex = 0; // Index สำหรับคำศัพท์ที่ต้องเดาเท่านั้น
+        let currentGapIndex = 0; 
+        let currentLineIndex = -1; // สำหรับติดตามบรรทัดปัจจุบัน (เริ่มที่ -1 ก่อนเริ่มเพลง)
         let musicStartTime = 0;
-        let totalWordIndex = 0; // Index สำหรับนับคำศัพท์ทั้งหมด (ไม่รวม 'R')
-        const guessResults = []; // เก็บผลลัพธ์การเดาคำศัพท์
-
+        let totalWordIndex = 0; 
+        const guessResults = []; 
+        
         // ความถี่ (Frequency) ของโน้ตดนตรี 
         const noteFrequencies = {
-            'C3': 130.81, 'D3': 146.83, 'E3': 164.81, 'F3': 174.61, 'G3': 196.00, 'A3': 220.00, 'B3': 246.94, // 3rd Octave
-            'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'Fs4': 369.99, 'G4': 392.00, 'A4': 440.00, 'B4': 493.88, // 4th Octave
-            'C5': 523.25, 'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99, // 5th Octave
-            'R': 0 // R = Rest (หยุด)
+            'C3': 130.81, 'D3': 146.83, 'E3': 164.81, 'F3': 174.61, 'G3': 196.00, 'A3': 220.00, 'B3': 246.94, 
+            'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'Fs4': 369.99, 'G4': 392.00, 'A4': 440.00, 'B4': 493.88, 
+            'C5': 523.25, 'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99, 
+            'R': 0 
         };
 
         // ----------------------------------------------------
         // 2. โครงสร้างข้อมูลเพลง (Melody, Lyrics, Gaps) - ตามโน้ตที่ผู้ใช้ให้มา
         // ----------------------------------------------------
         
-        // โครงสร้าง: [โน้ต, ความยาวจังหวะ, 'คำศัพท์', เป็นคำที่ต้องเดาหรือไม่, {ข้อมูลการเดา}]
+        // โครงสร้าง: [โน้ต, ความยาวจังหวะ, 'คำศัพท์', เป็นคำที่ต้องเดาหรือไม่, {ข้อมูลการเดา, Line Index}]
         const songData = [
             // --- Line 1: Dashing through the snow, in a one-horse open sleigh.
-            ['D4', 0.5, 'Dash', false], ['B3', 0.5, 'ing', false], ['A3', 0.5, 'through', false], ['G3', 0.5, 'the', false], ['D4', 0.5, 'snow,', true, { correct: 'snow', choices: ['snow', 'slow'] }], ['R', 0.5, '', false],
-            ['D4', 0.5, 'in', false], ['D4', 0.5, 'a', false], ['D4', 0.5, 'one-', false], ['B3', 0.5, 'horse', false], ['A3', 0.5, 'open', false], ['G3', 0.5, 'sleigh.', false], ['R', 1.0, '', false], 
+            ['D4', 0.5, 'Dash', false, 1], ['B3', 0.5, 'ing', false, 1], ['A3', 0.5, 'through', false, 1], ['G3', 0.5, 'the', false, 1], ['D4', 0.5, 'snow,', true, { correct: 'snow', choices: ['snow', 'slow'] }, 1], ['R', 0.5, '', false, 1],
+            ['D4', 0.5, 'in', false, 1], ['D4', 0.5, 'a', false, 1], ['D4', 0.5, 'one-', false, 1], ['B3', 0.5, 'horse', false, 1], ['A3', 0.5, 'open', false, 1], ['G3', 0.5, 'sleigh.', false, 1], ['R', 1.0, '', false, 1], 
             
             // --- Line 2: O'er the fields we go, laughing all the way;
-            ['E4', 0.5, "O'er", false], ['C4', 0.5, 'the', false], ['B3', 0.5, 'fields', false], ['A3', 0.5, 'we', false], ['Fs4', 0.5, 'go,', true, { correct: 'go', choices: ['go', 'grew'] }], ['R', 0.5, '', false], 
-            ['D4', 0.5, 'laugh', false], ['D4', 0.5, 'ing', false], ['C4', 0.5, 'all', false], ['A3', 0.5, 'the', false], ['B3', 0.5, 'way;', false], ['R', 0.5, '', false],
+            ['E4', 0.5, "O'er", false, 2], ['C4', 0.5, 'the', false, 2], ['B3', 0.5, 'fields', false, 2], ['A3', 0.5, 'we', false, 2], ['Fs4', 0.5, 'go,', true, { correct: 'go', choices: ['go', 'grew'] }, 2], ['R', 0.5, '', false, 2], 
+            ['D4', 0.5, 'laugh', false, 2], ['D4', 0.5, 'ing', false, 2], ['C4', 0.5, 'all', false, 2], ['A3', 0.5, 'the', false, 2], ['B3', 0.5, 'way;', false, 2], ['R', 0.5, '', false, 2],
 
             // --- Line 3: Bells on bob-tail ring, making spirits bright,
-            ['D4', 0.5, 'Bells', false], ['B3', 0.5, 'on', false], ['A3', 0.5, 'bob-', false], ['G3', 0.5, 'tail', false], ['D4', 0.5, 'ring,', true, { correct: 'ring', choices: ['ring', 'wring'] }], ['R', 0.5, '', false],
-            ['D4', 0.5, 'mak', false], ['D4', 0.5, 'ing', false], ['B3', 0.5, 'spir', false], ['A3', 0.5, 'its', false], ['G3', 0.5, 'bright,', false], ['R', 0.5, '', false],
+            ['D4', 0.5, 'Bells', false, 3], ['B3', 0.5, 'on', false, 3], ['A3', 0.5, 'bob-', false, 3], ['G3', 0.5, 'tail', false, 3], ['D4', 0.5, 'ring,', true, { correct: 'ring', choices: ['ring', 'wring'] }, 3], ['R', 0.5, '', false, 3],
+            ['D4', 0.5, 'mak', false, 3], ['D4', 0.5, 'ing', false, 3], ['B3', 0.5, 'spir', false, 3], ['A3', 0.5, 'its', false, 3], ['G3', 0.5, 'bright,', false, 3], ['R', 0.5, '', false, 3],
             
             // --- Line 4: What fun it is to ride and sing a sleighing song to-night! Oh!
-            ['E4', 0.5, 'what', false], ['E4', 0.5, 'fun', false], ['C4', 0.5, 'it', false], ['E4', 0.5, 'is', false], ['E4', 0.5, 'to', false], ['C4', 0.5, 'ride', false], ['B3', 0.5, 'and', false], ['A3', 0.5, 'sing', false], 
-            ['D4', 0.5, 'a', false], ['D4', 0.5, 'sleigh', false], ['D4', 0.5, 'ing', false], ['E4', 0.5, 'song', false], ['C4', 0.5, 'to-', false], ['A3', 0.5, 'night!', false], ['G3', 1.0, 'Oh!', false], ['R', 1.0, '', false], 
+            ['E4', 0.5, 'what', false, 4], ['E4', 0.5, 'fun', false, 4], ['C4', 0.5, 'it', false, 4], ['E4', 0.5, 'is', false, 4], ['E4', 0.5, 'to', false, 4], ['C4', 0.5, 'ride', false, 4], ['B3', 0.5, 'and', false, 4], ['A3', 0.5, 'sing', false, 4], 
+            ['D4', 0.5, 'a', false, 4], ['D4', 0.5, 'sleigh', false, 4], ['D4', 0.5, 'ing', false, 4], ['E4', 0.5, 'song', false, 4], ['C4', 0.5, 'to-', false, 4], ['A3', 0.5, 'night!', false, 4], ['G3', 1.0, 'Oh!', false, 4], ['R', 1.0, '', false, 4], 
 
             // --- Line 5: Jingle bells, jingle bells, jingle all the way! Oh, what fun it 
-            ['B3', 0.5, 'Jin', false], ['B3', 0.5, 'gle', false], ['B3', 0.5, 'bells,', false], ['B3', 0.5, 'jin', false], ['B3', 0.5, 'gle', false], ['B3', 0.5, 'bells,', true, { correct: 'bells', choices: ['bells', 'balls'] }], ['R', 0.5, '', false], 
-            ['B3', 0.5, 'jin', false], ['D4', 0.5, 'gle', false], ['G3', 0.5, 'all', false], ['A3', 0.5, 'the', false], ['B3', 1.0, 'way!', false], ['B3', 0.5, 'Oh,', false], ['B3', 0.5, 'what', false], ['B3', 0.5, 'fun', false], ['B3', 0.5, 'it', false], 
+            ['B3', 0.5, 'Jin', false, 5], ['B3', 0.5, 'gle', false, 5], ['B3', 0.5, 'bells,', false, 5], ['B3', 0.5, 'jin', false, 5], ['B3', 0.5, 'gle', false, 5], ['B3', 0.5, 'bells,', true, { correct: 'bells', choices: ['bells', 'balls'] }, 5], ['R', 0.5, '', false, 5], 
+            ['B3', 0.5, 'jin', false, 5], ['D4', 0.5, 'gle', false, 5], ['G3', 0.5, 'all', false, 5], ['A3', 0.5, 'the', false, 5], ['B3', 1.0, 'way!', false, 5], ['B3', 0.5, 'Oh,', false, 5], ['B3', 0.5, 'what', false, 5], ['B3', 0.5, 'fun', false, 5], ['B3', 0.5, 'it', false, 5], 
             
             // --- Line 6: is to ride in a one horse open sleigh! Hey!
-            ['B3', 0.5, 'is', false], ['A3', 0.5, 'to', false], ['A3', 0.5, 'ride', false], ['A3', 0.5, 'in', false], ['A3', 0.5, 'a', false], ['B3', 0.5, 'one', false], ['A3', 0.5, 'horse', false], ['B3', 0.5, 'open', false], 
-            ['D4', 0.5, 'sleigh!', false], ['B3', 0.5, 'Hey!', false], ['R', 1.0, '', false], ['R', 0.5, '', false],
+            ['B3', 0.5, 'is', false, 6], ['A3', 0.5, 'to', false, 6], ['A3', 0.5, 'ride', false, 6], ['A3', 0.5, 'in', false, 6], ['A3', 0.5, 'a', false, 6], ['B3', 0.5, 'one', false, 6], ['A3', 0.5, 'horse', false, 6], ['B3', 0.5, 'open', false, 6], 
+            ['D4', 0.5, 'sleigh!', false, 6], ['B3', 0.5, 'Hey!', false, 6], ['R', 1.0, '', false, 6], ['R', 0.5, '', false, 6],
 
             // --- Line 7: Jingle bells, jingle bells, jingle all the way! Oh, what fun it 
-            ['C4', 0.5, 'Jin', false], ['C4', 0.5, 'gle', false], ['C4', 0.5, 'bells,', false], ['C4', 0.5, 'jin', false], ['C4', 0.5, 'gle', false], ['C4', 0.5, 'bells,', false], ['R', 0.5, '', false], 
-            ['B3', 0.5, 'jin', false], ['B3', 0.5, 'gle', false], ['B3', 0.5, 'all', false], ['B3', 0.5, 'the', false], ['A3', 1.0, 'way!', true, { correct: 'way', choices: ['way', 'weigh'] }], ['B3', 0.5, 'Oh,', false], ['B3', 0.5, 'what', false], ['B3', 0.5, 'fun', false], ['B3', 0.5, 'it', false], 
+            ['C4', 0.5, 'Jin', false, 7], ['C4', 0.5, 'gle', false, 7], ['C4', 0.5, 'bells,', false, 7], ['C4', 0.5, 'jin', false, 7], ['C4', 0.5, 'gle', false, 7], ['C4', 0.5, 'bells,', false, 7], ['R', 0.5, '', false, 7], 
+            ['B3', 0.5, 'jin', false, 7], ['B3', 0.5, 'gle', false, 7], ['B3', 0.5, 'all', false, 7], ['B3', 0.5, 'the', false, 7], ['A3', 1.0, 'way!', true, { correct: 'way', choices: ['way', 'weigh'] }, 7], ['B3', 0.5, 'Oh,', false, 7], ['B3', 0.5, 'what', false, 7], ['B3', 0.5, 'fun', false, 7], ['B3', 0.5, 'it', false, 7], 
             
             // --- Line 8: is to ride in a one horse open sleigh!
-            ['C4', 0.5, 'is', false], ['C4', 0.5, 'to', false], ['B3', 0.5, 'ride', false], ['B3', 0.5, 'in', false], ['B3', 0.5, 'a', false], ['D4', 0.5, 'one', false], ['D4', 0.5, 'horse', false], ['C4', 0.5, 'open', false], 
-            ['G3', 2.0, 'sleigh!', false], // จบเพลง
+            ['C4', 0.5, 'is', false, 8], ['C4', 0.5, 'to', false, 8], ['B3', 0.5, 'ride', false, 8], ['B3', 0.5, 'in', false, 8], ['B3', 0.5, 'a', false, 8], ['D4', 0.5, 'one', false, 8], ['D4', 0.5, 'horse', false, 8], ['C4', 0.5, 'open', false, 8], 
+            ['G3', 2.0, 'sleigh!', false, 8], 
         ];
 
         // ----------------------------------------------------
@@ -238,7 +224,6 @@
             const attackTime = 0.01;
             const releaseTime = 0.1;
 
-            // ADSR Envelope
             gainNode.gain.setValueAtTime(0, startTime);
             gainNode.gain.linearRampToValueAtTime(0.5, startTime + attackTime); 
             gainNode.gain.linearRampToValueAtTime(0.5, startTime + duration - releaseTime);
@@ -252,33 +237,33 @@
         }
 
         // ----------------------------------------------------
-        // 4. ฟังก์ชันจัดการหน้าจอ (Lyrics, UI, Guessing)
+        // 4. ฟังก์ชันจัดการหน้าจอ (Lyrics, UI, Guessing, Scrolling)
         // ----------------------------------------------------
         
         function initializeLyrics() {
             const container = document.getElementById('lyrics-container');
             container.innerHTML = '';
             
-            // การแบ่งบรรทัดตามโครงสร้างโน้ตเพลง
-            const lines = [
-                songData.slice(0, 13),   
-                songData.slice(13, 25), 
-                songData.slice(25, 37), 
-                songData.slice(37, 53), 
-                songData.slice(53, 69), 
-                songData.slice(69, 81), 
-                songData.slice(81, 97), 
-                songData.slice(97, 105), 
-            ];
+            // ใช้ Line Index เพื่อจัดกลุ่มคำ
+            const linesData = {};
+            songData.forEach(item => {
+                const lineIndex = item.length === 5 ? item[4] : item[5]; // Line Index อยู่ในตำแหน่งที่ 4 หรือ 5
+                if (!linesData[lineIndex]) {
+                    linesData[lineIndex] = [];
+                }
+                linesData[lineIndex].push(item);
+            });
+            
+            let wordCounter = 0;
+            totalWordIndex = 0;
 
-            let wordCounter = 0; // สำหรับคำที่ต้องเดา (Gap words)
-            totalWordIndex = 0; // สำหรับคำทั้งหมด (Word tracking)
-
-            lines.forEach((lineData) => {
+            Object.keys(linesData).sort().forEach(lineIndex => {
+                const lineData = linesData[lineIndex];
                 const lineDiv = document.createElement('div');
-                lineDiv.className = 'lyric-line';
+                lineDiv.className = 'lyric-line non-current-line';
+                lineDiv.id = 'line-' + lineIndex;
                 
-                lineData.forEach(([note, duration, word, isGap, gapData]) => {
+                lineData.forEach(([note, duration, word, isGap, gapData, lineIdx]) => {
                     if (word && word !== 'R') { 
                         const wordSpan = document.createElement('span');
                         wordSpan.className = 'word';
@@ -291,7 +276,7 @@
                             wordSpan.dataset.index = wordCounter;
                             wordSpan.dataset.correct = gapData.correct;
                             wordSpan.dataset.choices = JSON.stringify(gapData.choices);
-                            wordSpan.dataset.guessed = 'false'; // สถานะการเดา
+                            wordSpan.dataset.guessed = 'false'; 
                             wordCounter++;
                         } else {
                             wordSpan.id = 'synced-word-' + totalWordIndex;
@@ -303,11 +288,19 @@
                 });
                 container.appendChild(lineDiv);
             });
-            currentGapIndex = 0; // Reset index for actual playback logic
+            currentGapIndex = 0;
+            
+            // ตั้งค่าบรรทัดแรกให้เป็น current
+            const firstLine = document.getElementById('line-1');
+            if(firstLine) {
+                 firstLine.classList.remove('non-current-line');
+                 firstLine.classList.add('current-line');
+                 currentLineIndex = 1;
+            }
         }
 
         /**
-         * จัดการการไฮไลท์เนื้อเพลงตามจังหวะเวลา
+         * จัดการการเลื่อนและการไฮไลท์เนื้อเพลง
          */
         function updateLyrics(index, delay) {
             setTimeout(() => {
@@ -317,24 +310,49 @@
                     previousWordElement.classList.remove('highlighted');
                 }
 
-                const [note, duration, word, isGap, gapData] = songData[index];
+                const [note, duration, word, isGap, gapData, lineIdx] = songData[index];
                 
+                // 2. จัดการการเลื่อน (Scrolling)
+                if (lineIdx !== currentLineIndex) {
+                    const newLineElement = document.getElementById('line-' + lineIdx);
+                    const oldLineElement = document.getElementById('line-' + currentLineIndex);
+                    
+                    if(oldLineElement) {
+                        oldLineElement.classList.remove('current-line');
+                        oldLineElement.classList.add('non-current-line');
+                    }
+                    
+                    if (newLineElement) {
+                        // คำนวณการเลื่อน: เลื่อนเพื่อให้บรรทัดใหม่มาอยู่ตรงกลางๆ ของ karaoke-window
+                        const lineTop = newLineElement.offsetTop;
+                        const lineHeight = newLineElement.offsetHeight;
+                        const windowHeight = document.getElementById('karaoke-window').offsetHeight;
+                        
+                        const scrollAmount = lineTop - (windowHeight / 2) + (lineHeight / 2);
+                        
+                        // ใช้ transform เพื่อการเลื่อนที่ราบรื่น (Smooth Scrolling)
+                        document.getElementById('lyrics-container').style.transform = `translateY(-${scrollAmount}px)`;
+                        
+                        newLineElement.classList.add('current-line');
+                        newLineElement.classList.remove('non-current-line');
+                        currentLineIndex = lineIdx;
+                    }
+                }
+
+                // 3. ไฮไลท์คำปัจจุบัน
                 if (word && word !== 'R') {
                     let wordElement = null;
                     
-                    // 2. หา Element ของคำปัจจุบัน
                     if (isGap) {
                         wordElement = document.getElementById('gap-word-' + currentGapIndex);
-                        // แสดงตัวเลือกคำศัพท์ทันทีที่ถึงจังหวะ
-                        if (wordElement) showChoices(wordElement);
+                        if (wordElement) showChoices(wordElement, gapData.choices, gapData.correct);
                     } else {
-                        // คำนวณหาดัชนีรวมของคำที่ไม่ใช่ R และไม่ใช่ Gap
+                        // คำนวณหาดัชนีรวมของคำที่ไม่ใช่ R
                         let textIndex = 0;
                         for (let i = 0; i < songData.length; i++) {
-                            const [n, d, w, iG] = songData[i];
+                            const [n, d, w] = songData[i];
                             if (w && w !== 'R') {
                                 if (i === index) {
-                                    // หาตำแหน่งใน DOM โดยใช้ ID ที่สร้างไว้
                                     wordElement = document.getElementById('synced-word-' + textIndex);
                                     break;
                                 }
@@ -343,15 +361,13 @@
                         }
                     }
                     
-                    // 3. ไฮไลท์คำปัจจุบัน
                     if (wordElement) {
                          wordElement.classList.add('highlighted');
                     }
                 }
                 
-                // 4. หากเป็นคำที่ต้องเดา ให้เพิ่มดัชนีของช่องว่าง
+                // 4. จัดการ Gap Index และ Timeout
                 if (isGap) {
-                    // หากยังไม่ถูกเดาเมื่อถึงโน้ตถัดไป ให้ถือว่าเดาผิด
                     const gapElement = document.getElementById('gap-word-' + currentGapIndex);
                     if (gapElement && gapElement.dataset.guessed === 'false') {
                          handleTimeout(gapElement);
@@ -365,16 +381,13 @@
         /**
          * แสดงปุ่มตัวเลือกคำศัพท์
          */
-        function showChoices(wordElement) {
+        function showChoices(wordElement, choices, correctWord) {
             const choicesContainer = document.getElementById('choices-container');
             choicesContainer.innerHTML = ''; 
             
-            const choices = JSON.parse(wordElement.dataset.choices);
-            const correctWord = wordElement.dataset.correct;
-
             choices.forEach(choice => {
                 const button = document.createElement('button');
-                button.className = 'choice-button';
+                button.className = 'choice-button active';
                 button.textContent = choice;
                 button.onclick = () => handleGuess(button, choice, correctWord, wordElement);
                 choicesContainer.appendChild(button);
@@ -388,11 +401,10 @@
             score -= 1; 
             document.getElementById('score-display').textContent = `คะแนน: ${score}`;
             wordElement.textContent = wordElement.dataset.correct + ' '; 
-            wordElement.style.color = '#F44336'; // สีแดง
-            wordElement.style.borderBottom = 'none'; // ลบเส้นประ
+            wordElement.style.color = '#F44336'; 
+            wordElement.style.borderBottom = 'none'; 
             wordElement.dataset.guessed = 'true';
 
-            // บันทึกผลลัพธ์
             guessResults.push({
                 word: wordElement.dataset.correct,
                 status: 'ผิด',
@@ -406,11 +418,11 @@
          * จัดการคำตอบของผู้เล่น
          */
         function handleGuess(button, guessedWord, correctWord, wordElement) {
-            if (wordElement.dataset.guessed === 'true') return; // กันการกดซ้ำ
+            if (wordElement.dataset.guessed === 'true') return;
 
             wordElement.dataset.guessed = 'true';
             const allChoiceButtons = document.getElementById('choices-container').querySelectorAll('.choice-button');
-            allChoiceButtons.forEach(btn => btn.disabled = true); // ปิดปุ่มอื่นทันที
+            allChoiceButtons.forEach(btn => btn.disabled = true);
 
             let resultStatus;
 
@@ -418,20 +430,18 @@
                 score += 10; 
                 resultStatus = 'ถูก';
                 wordElement.textContent = correctWord + ' ';
-                wordElement.style.color = '#8BC34A'; // สีเขียว
+                wordElement.style.color = '#8BC34A'; 
                 wordElement.style.borderBottom = 'none';
             } else {
                 score -= 1; 
                 resultStatus = 'ผิด';
                 wordElement.textContent = correctWord + ' '; 
-                wordElement.style.color = '#F44336'; // สีแดง
+                wordElement.style.color = '#F44336'; 
                 wordElement.style.borderBottom = 'none';
-                
             }
 
             document.getElementById('score-display').textContent = `คะแนน: ${score}`;
             
-            // บันทึกผลลัพธ์
             guessResults.push({
                 word: correctWord,
                 status: resultStatus,
@@ -444,7 +454,7 @@
                 document.getElementById('choices-container').innerHTML = '';
             }, 500);
         }
-
+        
         // ----------------------------------------------------
         // 5. ฟังก์ชันสรุปผล
         // ----------------------------------------------------
@@ -487,26 +497,29 @@
             isPlaying = true;
             score = 0;
             currentGapIndex = 0;
+            currentLineIndex = -1; // รีเซ็ต Line Index
             guessResults.length = 0;
             document.getElementById('score-display').textContent = 'คะแนน: 0';
             document.getElementById('playButton').disabled = true;
             document.getElementById('choices-container').innerHTML = ''; 
-            document.getElementById('summary-modal').style.display = "none"; // ปิดสรุปถ้ามี
+            document.getElementById('summary-modal').style.display = "none"; 
 
             musicStartTime = audioContext.currentTime;
             let currentTime = musicStartTime;
             
-            // รีเซ็ตเนื้อเพลงและคำที่เว้นว่าง
-            initializeLyrics();
+            initializeLyrics(); // โหลดและจัดรูปแบบเนื้อเพลงใหม่
+            // รีเซ็ตตำแหน่ง Scroll เริ่มต้น
+            document.getElementById('lyrics-container').style.transform = `translateY(0)`;
 
-            songData.forEach(([noteName, lengthInBeats, word, isGap, gapData], index) => {
+
+            songData.forEach(([noteName, lengthInBeats, word, isGap, gapData, lineIdx], index) => {
                 const frequency = noteFrequencies[noteName];
                 const duration = lengthInBeats * secondsPerBeat;
                 
                 // 1. เล่นโน้ตดนตรี
                 playNote(frequency, currentTime, duration);
                 
-                // 2. จัดการไฮไลท์เนื้อเพลง
+                // 2. จัดการไฮไลท์และการเลื่อน
                 const delayMs = (currentTime - musicStartTime) * 1000;
                 updateLyrics(index, delayMs);
                 
@@ -522,7 +535,7 @@
                 isPlaying = false;
                 document.getElementById('playButton').disabled = false;
                 document.getElementById('status').textContent = `จบเพลงแล้ว! ดูสรุปผล...`;
-                showSummary(); // แสดงหน้าสรุปผล
+                showSummary(); 
             }, totalDuration * 1000 + 300); 
         }
 
@@ -533,17 +546,11 @@
         document.getElementById('status').textContent = 'พร้อมเล่น';
         initializeLyrics(); 
         
-        // ปิด Modal เมื่อคลิกที่ปุ่ม x หรือนอกกรอบ
+        // จัดการ Modal
         const modal = document.getElementById('summary-modal');
         const closeBtn = document.getElementsByClassName("close")[0];
-        closeBtn.onclick = function() {
-          modal.style.display = "none";
-        }
-        window.onclick = function(event) {
-          if (event.target == modal) {
-            modal.style.display = "none";
-          }
-        }
+        closeBtn.onclick = function() { modal.style.display = "none"; }
+        window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } }
     </script>
 </body>
 </html>
