@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎤 Sing & Spell Stars</title>
+    <title>🎤 Sing & Spell Stars (MP3 Sync)</title>
     <style>
         /* --- ธีมสีพาสเทล (Pastel Theme) --- */
         @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600&display=swap');
@@ -187,8 +187,7 @@
         <h1>🎤 Sing & Spell Stars</h1>
         <h2>เลือกเพลงเพื่อเริ่มเล่น</h2>
         <div id="song-list-container">
-            <button class="menu-button" onclick="loadSongAndStartGame('jinglebells')">🎶 Jingle Bells</button>
-            <button class="menu-button" onclick="loadSongAndStartGame('wewish')">🎄 We Wish You A Merry Christmas</button>
+            <button class="menu-button" onclick="loadSongAndStartGame('jinglebells')">🎶 Jingle Bells (MP3 Sync)</button>
         </div>
     </div>
 
@@ -228,148 +227,79 @@
 
     <script>
         // ----------------------------------------------------
-        // 1. การกำหนดค่าพื้นฐานและข้อมูลเพลง
+        // 1. การกำหนดค่าพื้นฐานและข้อมูลเพลง (MP3 SYNCHRONIZED)
         // ----------------------------------------------------
-        let audioContext;
         let isPlaying = false;
-        const tempo = 120; // 120 BPM = 1 beat/0.5 วินาที
-        const secondsPerBeat = 60 / tempo;
         let score = 0;
         let currentGapIndex = 0; 
         let currentLineIndex = -1;
-        let musicStartTime = 0;
         let totalWordIndex = 0; 
         const guessResults = []; 
-        let currentSongData = null; // เก็บข้อมูลเพลงที่กำลังเล่น
+        let currentSongData = null; 
+        let audioPlayer = null; 
+        let syncInterval = null; 
+        let currentWordIndex = 0; 
 
-        const noteFrequencies = {
-            'C3': 130.81, 'D3': 146.83, 'E3': 164.81, 'F3': 174.61, 'G3': 196.00, 'A3': 220.00, 'B3': 246.94, 
-            'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'Fs4': 369.99, 'G4': 392.00, 'A4': 440.00, 'B4': 493.88, 
-            'C5': 523.25, 'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99, 
-            'R': 0 
-        };
-
-        // ** โครงสร้างข้อมูลเพลงทั้งหมด (ปรับปรุงจังหวะและโทนเสียง) **
+        // ** โครงสร้างข้อมูลเพลงทั้งหมด (MP3 Sync) **
         const songsData = {
             "jinglebells": {
-                title: "🎶 Jingle Bells (Optimized Square Wave)",
-                // โทนเสียงที่ใช้: 'square'
-                oscillatorType: 'square',
+                title: "🎶 Jingle Bells (MP3 Synchronization)",
+                audioUrl: "https://raw.githubusercontent.com/Nitiwat-Nai/Sing-Spell-Stars/main/Musicphrase-Jingle-Bells-Ukulele(chosic.com).mp3",
+                // [เวลาเริ่ม (วินาที), 'คำศัพท์', เป็นคำที่ต้องเดา, {ข้อมูลการเดา (Correct, Choices, Thai)}, Line Index]
                 data: [
-                    // [โน้ต, จังหวะ, 'คำศัพท์', เป็นคำที่ต้องเดา, {ข้อมูลการเดา (Correct, Choices, Thai)}, Line Index]
-                    
-                    // Stanza 1 (Melody E-E-E)
-                    ['E4', 0.5, 'Dash', false, null, 1], ['E4', 0.5, 'ing', false, null, 1], ['E4', 1.0, 'through', false, null, 1], 
-                    ['E4', 0.5, 'the', false, null, 1], ['E4', 0.5, 'snow,', true, { correct: 'snow,', choices: ['snow,', 'slow,'], thai: 'หิมะ' }, 1], ['R', 1.0, '', false, null, 1], // **GAP 1**
-                    ['E4', 0.5, 'in', false, null, 1], ['E4', 0.5, 'a', false, null, 1], ['E4', 1.0, 'one-', false, null, 1], 
-                    ['E4', 0.5, 'horse', false, null, 1], ['E4', 0.5, 'open', false, null, 1], ['R', 0.5, '', false, null, 1], ['G4', 1.5, 'sleigh!', false, null, 1], ['R', 0.5, '', false, null, 1],
-                    
-                    // Stanza 2 (Melody G-G-G-G-A-A-A-A-G-G-F-D) - ปรับ Octave ตามมาตรฐาน
-                    ['G4', 0.5, "O'er", false, null, 2], ['G4', 0.5, 'the', false, null, 2], ['G4', 1.0, 'fields', false, null, 2], 
-                    ['G4', 0.5, 'we', false, null, 2], ['G4', 0.5, 'go,', false, null, 2], ['R', 1.0, '', false, null, 2], 
-                    ['A4', 0.5, 'laugh', false, null, 2], ['A4', 0.5, 'ing', false, null, 2], ['A4', 1.0, 'all', false, null, 2], 
-                    ['A4', 0.5, 'the', false, null, 2], ['A4', 0.5, 'way;', false, null, 2], ['R', 0.5, '', false, null, 2], ['G4', 1.5, 'Oh!', false, null, 2], ['R', 0.5, '', false, null, 2],
-                    
-                    // Stanza 3 (Melody Fs-Fs-Fs)
-                    ['Fs4', 0.5, 'Bells', true, { correct: 'Bells', choices: ['Bells', 'Balls'], thai: 'กระดิ่ง' }, 3], ['Fs4', 0.5, 'on', false, null, 3], ['Fs4', 1.0, 'bob-', false, null, 3], // **GAP 2**
-                    ['Fs4', 0.5, 'tail', false, null, 3], ['Fs4', 0.5, 'ring,', false, null, 3], ['R', 1.0, '', false, null, 3], 
-                    ['E4', 0.5, 'mak', false, null, 3], ['E4', 0.5, 'ing', false, null, 3], ['E4', 1.0, 'spirits', false, null, 3], 
-                    ['E4', 0.5, 'bright,', false, null, 3], ['D4', 0.5, '', false, null, 3], ['R', 0.5, '', false, null, 3], ['D4', 1.5, 'Oh!', false, null, 3], ['R', 0.5, '', false, null, 3],
-                    
-                    // Stanza 4 (Melody C-C-C)
-                    ['C4', 0.5, 'what', false, null, 4], ['C4', 0.5, 'fun', false, null, 4], ['C4', 1.0, 'it', false, null, 4], 
-                    ['C4', 0.5, 'is', false, null, 4], ['C4', 0.5, 'to', false, null, 4], ['R', 0.5, '', false, null, 4], 
-                    ['D4', 0.5, 'ride', false, null, 4], ['D4', 0.5, 'and', false, null, 4], ['D4', 1.0, 'sing', true, { correct: 'sing', choices: ['sing', 'sink'], thai: 'ร้องเพลง' }, 4], // **GAP 3**
-                    ['E4', 0.5, 'a', false, null, 4], ['E4', 0.5, 'sleigh', false, null, 4], ['R', 0.5, '', false, null, 4], ['G4', 1.5, 'ing', false, null, 4], ['R', 0.5, '', false, null, 4],
-                    
-                    // Chorus (Melody G-G-G, G-G-G, G-A-F-D-C) - แก้โน้ตและจังหวะให้ตรงกับมาตรฐาน
-                    ['G4', 0.5, 'Jin', false, null, 5], ['G4', 0.5, 'gle', false, null, 5], ['G4', 1.0, 'bells,', false, null, 5], 
-                    ['G4', 0.5, 'jin', false, null, 5], ['G4', 0.5, 'gle', false, null, 5], ['G4', 1.0, 'bells,', false, null, 5], 
-                    ['G4', 0.5, 'jin', false, null, 5], ['A4', 0.5, 'gle', false, null, 5], ['F4', 0.5, 'all', false, null, 5], ['D4', 0.5, 'the', false, null, 5], 
-                    ['C4', 1.5, 'way!', false, null, 5], ['R', 0.5, 'Oh,', true, { correct: 'Oh,', choices: ['Oh,', 'Go,'], thai: 'โอ้' }, 5], // **GAP 4**
+                    // Stanza 1
+                    [1.70, 'Dash', false, null, 1], [1.95, 'ing', false, null, 1], [2.30, 'through', false, null, 1], 
+                    [2.75, 'the', false, null, 1], [3.00, 'snow,', true, { correct: 'snow,', choices: ['snow,', 'slow,'], thai: 'หิมะ' }, 1], 
+                    [4.00, 'in', false, null, 1], [4.25, 'a', false, null, 1], [4.50, 'one-', false, null, 1], 
+                    [4.95, 'horse', false, null, 1], [5.20, 'open', false, null, 1], [5.90, 'sleigh!', false, null, 1], 
 
-                    ['G4', 0.5, 'what', false, null, 6], ['G4', 0.5, 'fun', false, null, 6], ['G4', 1.0, 'it', false, null, 6], 
-                    ['F4', 0.5, 'is', false, null, 6], ['F4', 0.5, 'to', false, null, 6], ['E4', 0.5, 'ride', false, null, 6], 
-                    ['E4', 0.5, 'in', false, null, 6], ['D4', 0.5, 'a', false, null, 6], ['D4', 0.5, 'one', false, null, 6], ['D4', 0.5, 'horse', false, null, 6], 
-                    ['C4', 1.5, 'open', true, { correct: 'open', choices: ['open', 'oven'], thai: 'เปิด' }, 6], ['R', 0.5, 'sleigh!', false, null, 6], // **GAP 5**
+                    // Stanza 2
+                    [7.60, "O'er", false, null, 2], [7.85, 'the', false, null, 2], [8.10, 'fields', false, null, 2], 
+                    [8.55, 'we', false, null, 2], [8.80, 'go,', false, null, 2], 
+                    [9.80, 'laugh', false, null, 2], [10.05, 'ing', false, null, 2], [10.30, 'all', false, null, 2], 
+                    [10.80, 'the', false, null, 2], [11.05, 'way;', false, null, 2], [11.80, 'Oh!', false, null, 2], 
                     
-                    // Outro (Final Jingle Bells)
-                    ['G4', 0.5, 'Jin', false, null, 7], ['G4', 0.5, 'gle', false, null, 7], ['G4', 1.0, 'bells,', false, null, 7], 
-                    ['G4', 0.5, 'jin', false, null, 7], ['G4', 0.5, 'gle', false, null, 7], ['G4', 1.0, 'bells,', false, null, 7], 
-                    ['G4', 0.5, 'jin', false, null, 7], ['A4', 0.5, 'gle', false, null, 7], ['F4', 0.5, 'all', false, null, 7], ['D4', 0.5, 'the', false, null, 7], 
-                    ['C4', 4.0, 'way!', false, null, 7] // โน้ตจบยาว 4.0 (Whole Note)
-                ]
-            },
-            "wewish": {
-                title: "🎄 We Wish You A Merry Christmas (Optimized Sine Wave)",
-                 // โทนเสียงที่ใช้: 'sine'
-                oscillatorType: 'sine',
-                data: [
-                    // [โน้ต, จังหวะ, 'คำศัพท์', เป็นคำที่ต้องเดา, {ข้อมูลการเดา (Correct, Choices, Thai)}, Line Index]
-                    // --- BARS 1-4 (G-C-C-D | C-B-A-G)
-                    ['G4', 0.5, 'We', false, null, 1], ['C5', 0.5, 'wish', false, null, 1], ['C5', 0.5, 'you', false, null, 1], ['D5', 0.5, 'a', false, null, 1], 
-                    ['C5', 0.5, 'mer-', false, null, 1], ['B4', 0.5, 'ry', false, null, 1], ['A4', 0.5, 'Christ-', true, { correct: 'Christ-', choices: ['Christ-', 'Cross-'], thai: 'คริสต์' }, 1], ['G4', 0.5, 'mas,', false, null, 1], // **GAP 1**
-                    ['R', 0.5, '', false, null, 2], ['G4', 0.5, 'we', false, null, 2], ['C5', 0.5, 'wish', false, null, 2], ['C5', 0.5, 'you', false, null, 2], 
-                    ['D5', 0.5, 'a', false, null, 2], ['C5', 0.5, 'mer-', false, null, 2], ['B4', 0.5, 'ry', false, null, 2], ['A4', 0.5, 'Christ-', false, null, 2], ['G4', 0.5, 'mas,', true, { correct: 'mas,', choices: ['mas,', 'man,'], thai: 'มาส' }, 2], // **GAP 2**
-
-                    // --- BARS 5-8 (E-E-F-F | G-E-D-C)
-                    ['R', 0.5, '', false, null, 3], ['E4', 0.5, 'we', false, null, 3], ['E4', 0.5, 'wish', false, null, 3], ['F4', 0.5, 'you', false, null, 3], ['F4', 0.5, 'a', false, null, 3], 
-                    ['G4', 0.5, 'mer-', false, null, 3], ['E4', 0.5, 'ry', false, null, 3], ['D4', 0.5, 'Christ-', false, null, 3], ['C4', 0.5, 'mas', false, null, 3], 
-                    ['R', 0.5, 'and', false, null, 4], ['G4', 0.5, 'a', false, null, 4], ['G4', 0.5, 'hap-', false, null, 4], ['G4', 0.5, 'py', true, { correct: 'py', choices: ['py', 'day'], thai: 'มีความสุข' }, 4], // **GAP 3**
-                    ['A4', 1.0, 'New', false, null, 4], ['G4', 1.0, 'Year!', false, null, 4], ['R', 1.0, '', false, null, 4], 
-
-                    // --- BARS 9-12 (B-B-C-A | G-D-E-F | D-G)
-                    ['R', 0.5, 'Good', false, null, 5], ['B4', 0.5, 'tid', true, { correct: 'tid', choices: ['tid', 'try'], thai: 'ข่าว' }, 5], ['B4', 0.5, '-ings', false, null, 5], ['C5', 0.5, 'we', false, null, 5], ['A4', 0.5, 'bring', false, null, 5], // **GAP 4**
-                    ['R', 0.5, 'to', false, null, 6], ['G4', 0.5, 'you', false, null, 6], ['D4', 0.5, 'and', false, null, 6], ['E4', 0.5, 'your', false, null, 6], ['F4', 0.5, 'kin;', false, null, 6], 
-                    ['D4', 1.0, 'Good', true, { correct: 'Good', choices: ['Good', 'Gold'], thai: 'ดี' }, 6], ['G4', 1.0, 'tidings', false, null, 6], ['R', 1.0, '', false, null, 6], // **GAP 5**
-
-                    // --- BARS 13-16 (D-D-E-D | C-A-A-G)
-                    ['D5', 0.5, 'tid', false, null, 7], ['D5', 0.5, '-ings', false, null, 7], ['E5', 0.5, 'for', false, null, 7], ['D5', 0.5, 'Christ-', false, null, 7], 
-                    ['C5', 0.5, 'mas', false, null, 7], ['A4', 0.5, 'and', false, null, 7], ['A4', 0.5, 'a', false, null, 7], ['G4', 0.5, 'hap-', false, null, 7], 
-                    ['F4', 0.5, 'py', false, null, 8], ['E4', 0.5, 'New', true, { correct: 'New', choices: ['New', 'Next'], thai: 'ใหม่' }, 8], ['R', 1.0, 'Year!', false, null, 8], // โน้ตตัวดำ 1.0 **GAP 6**
-                    ['G4', 2.0, 'We', false, null, 8], ['R', 2.0, '', false, null, 8], // โน้ตตัวขาว 2.0
+                    // Stanza 3
+                    [13.50, 'Bells', true, { correct: 'Bells', choices: ['Bells', 'Balls'], thai: 'กระดิ่ง' }, 3], [13.75, 'on', false, null, 3], [14.00, 'bob-', false, null, 3], // **GAP 2**
+                    [14.50, 'tail', false, null, 3], [14.75, 'ring,', false, null, 3], 
+                    [15.80, 'mak', false, null, 3], [16.05, 'ing', false, null, 3], [16.30, 'spirits', false, null, 3], 
+                    [16.80, 'bright,', false, null, 3], [17.50, 'Oh!', false, null, 3],
                     
-                    // --- Ending (เหมือนท่อนแรก แต่จบยาว)
-                    ['R', 0.5, 'we', false, null, 9], ['G4', 0.5, 'wish', true, { correct: 'wish', choices: ['wish', 'wash'], thai: 'ปรารถนา' }, 9], ['C5', 0.5, 'you', false, null, 9], ['D5', 0.5, 'a', false, null, 9], // **GAP 7**
-                    ['C5', 0.5, 'mer-', false, null, 9], ['B4', 0.5, 'ry', false, null, 9], ['A4', 0.5, 'Christ-', false, null, 9], ['G4', 0.5, 'mas,', false, null, 9], 
-                    ['R', 0.5, 'we', false, null, 10], ['G4', 0.5, 'wish', false, null, 10], ['C5', 0.5, 'you', false, null, 10], ['D5', 0.5, 'a', false, null, 10], ['C5', 0.5, 'mer-', false, null, 10], 
-                    ['B4', 0.5, 'ry', false, null, 11], ['A4', 0.5, 'Christ-', true, { correct: 'Christ-', choices: ['Christ-', 'Cross-'], thai: 'คริสต์' }, 11], ['G4', 0.5, 'mas,', false, null, 11], ['E4', 0.5, 'we', false, null, 11], // **GAP 8**
-                    ['E4', 0.5, 'wish', false, null, 12], ['F4', 0.5, 'you', true, { correct: 'you', choices: ['you', 'your'], thai: 'คุณ' }, 12], ['F4', 0.5, 'a', false, null, 12], ['G4', 0.5, 'mer-', false, null, 12], // **GAP 9**
-                    ['E4', 0.5, 'ry', false, null, 12], ['D4', 0.5, 'Christ-', false, null, 12], ['C4', 4.0, 'mas', false, null, 12] // โน้ตจบยาว 4.0 (Whole Note)
+                    // Stanza 4
+                    [19.20, 'what', false, null, 4], [19.45, 'fun', false, null, 4], [19.70, 'it', false, null, 4], 
+                    [20.15, 'is', false, null, 4], [20.40, 'to', false, null, 4], 
+                    [21.20, 'ride', false, null, 4], [21.45, 'and', false, null, 4], [21.70, 'sing', true, { correct: 'sing', choices: ['sing', 'sink'], thai: 'ร้องเพลง' }, 4], // **GAP 3**
+                    [22.20, 'a', false, null, 4], [22.45, 'sleigh', false, null, 4], [22.90, 'ing', false, null, 4], 
+                    
+                    // Chorus (Jingle bells)
+                    [24.50, 'Jin', false, null, 5], [24.75, 'gle', false, null, 5], [25.10, 'bells,', false, null, 5], 
+                    [25.60, 'jin', false, null, 5], [25.85, 'gle', false, null, 5], [26.20, 'bells,', false, null, 5], 
+                    [26.70, 'jin', false, null, 5], [26.95, 'gle', false, null, 5], [27.20, 'all', false, null, 5], [27.45, 'the', false, null, 5], 
+                    [27.70, 'way!', false, null, 5], [28.50, 'Oh,', true, { correct: 'Oh,', choices: ['Oh,', 'Go,'], thai: 'โอ้' }, 5], // **GAP 4**
+
+                    // Chorus (What fun it is to ride...)
+                    [29.30, 'what', false, null, 6], [29.55, 'fun', false, null, 6], [29.90, 'it', false, null, 6], 
+                    [30.40, 'is', false, null, 6], [30.65, 'to', false, null, 6], [30.90, 'ride', false, null, 6], 
+                    [31.25, 'in', false, null, 6], [31.50, 'a', false, null, 6], [31.75, 'one', false, null, 6], [32.00, 'horse', false, null, 6], 
+                    [32.30, 'open', true, { correct: 'open', choices: ['open', 'oven'], thai: 'เปิด' }, 6], [33.50, 'sleigh!', false, null, 6], // **GAP 5**
+
+                    // Chorus Repeat (Jingle bells)
+                    [34.80, 'Jin', false, null, 7], [35.05, 'gle', false, null, 7], [35.40, 'bells,', false, null, 7], 
+                    [35.90, 'jin', false, null, 7], [36.15, 'gle', false, null, 7], [36.50, 'bells,', false, null, 7], 
+                    [37.00, 'jin', false, null, 7], [37.25, 'gle', false, null, 7], [37.50, 'all', false, null, 7], [37.75, 'the', false, null, 7], 
+                    [38.00, 'way!', false, null, 7], [38.80, 'Oh,', false, null, 7], 
+                    
+                    // Chorus Repeat (What fun it is to ride...) - Ending
+                    [39.60, 'what', false, null, 8], [39.85, 'fun', false, null, 8], [40.20, 'it', false, null, 8], 
+                    [40.70, 'is', false, null, 8], [40.95, 'to', false, null, 8], [41.20, 'ride', false, null, 8], 
+                    [41.55, 'in', false, null, 8], [41.80, 'a', false, null, 8], [42.05, 'one', false, null, 8], [42.30, 'horse', false, null, 8], 
+                    [42.60, 'open', false, null, 8], [43.60, 'sleigh!', false, null, 8] 
                 ]
             }
         };
 
-
         // ----------------------------------------------------
-        // 2. ฟังก์ชันการเล่นเสียง (Play Note) - มีการปรับปรุง
-        // ----------------------------------------------------
-        
-        function playNote(frequency, startTime, duration, oscillatorType) {
-            if (frequency === 0) return; 
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            // ใช้ Type ที่กำหนดใน Song Data
-            oscillator.type = oscillatorType; 
-
-            oscillator.frequency.setValueAtTime(frequency, startTime);
-            const attackTime = 0.01;
-            const releaseTime = 0.2; // เพิ่ม release time ให้เสียงนุ่มนวลขึ้น
-            
-            gainNode.gain.setValueAtTime(0, startTime);
-            gainNode.gain.linearRampToValueAtTime(0.5, startTime + attackTime); 
-            gainNode.gain.linearRampToValueAtTime(0.5, startTime + duration - releaseTime);
-            gainNode.gain.linearRampToValueAtTime(0, startTime + duration); 
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            oscillator.start(startTime);
-            oscillator.stop(startTime + duration);
-        }
-
-        // ----------------------------------------------------
-        // 3. ฟังก์ชันการจัดการหน้าจอและเกมเพลย์ - ไม่มีเปลี่ยนแปลง
+        // 2. ฟังก์ชันการจัดการหน้าจอและเกมเพลย์
         // ----------------------------------------------------
         
         function initializeLyrics(songData) {
@@ -388,18 +318,17 @@
             let wordCounter = 0;
             totalWordIndex = 0;
             
-            // ใช้ Object.keys.forEach เพื่อวนตาม Line Index ที่กำหนด
             Object.keys(linesData).sort((a, b) => a - b).forEach(lineIndex => {
                 const lineData = linesData[lineIndex];
                 const lineDiv = document.createElement('div');
                 lineDiv.className = 'lyric-line non-current-line';
                 lineDiv.id = 'line-' + lineIndex;
                 
-                lineData.forEach(([note, duration, word, isGap, gapData]) => {
+                lineData.forEach(([time, word, isGap, gapData]) => {
                     if (word && word !== 'R') { 
                         const wordSpan = document.createElement('span');
                         wordSpan.className = 'word';
-                        wordSpan.textContent = word.replace('R', '') + ' ';
+                        wordSpan.textContent = word + ' ';
                         
                         if (isGap) {
                             wordSpan.id = 'gap-word-' + wordCounter;
@@ -415,6 +344,7 @@
                             wordSpan.id = 'synced-word-' + totalWordIndex;
                         }
                         
+                        wordSpan.dataset.time = time; // เก็บเวลาซิงค์ไว้ใน Data Attribute
                         lineDiv.appendChild(wordSpan);
                         totalWordIndex++;
                     }
@@ -431,95 +361,127 @@
             }
         }
 
-        function updateLyrics(index, delay) {
-            setTimeout(() => {
-                const previousWordElement = document.querySelector(`.lyric-line .highlighted`);
-                if (previousWordElement) {
-                    previousWordElement.classList.remove('highlighted');
-                }
+        // ----------------------------------------------------
+        // 3. ฟังก์ชันซิงโครไนซ์เนื้อเพลงกับ MP3 (สำคัญ)
+        // ----------------------------------------------------
 
-                const data = currentSongData.data[index];
-                const word = data[2];
-                const isGap = data[3];
-                const lineIdx = data[5];
+        function syncLyrics() {
+            if (!audioPlayer || audioPlayer.paused) return;
+
+            const currentTime = audioPlayer.currentTime;
+            const data = currentSongData.data;
+
+            // ตรวจสอบและจัดการคำที่ผ่านมาแล้ว
+            while (currentWordIndex < data.length) {
+                const [wordStartTime, word, isGap, gapData, lineIdx] = data[currentWordIndex];
                 
-                // --- Scrolling Logic ---
-                if (lineIdx && lineIdx !== currentLineIndex) {
-                    const newLineElement = document.getElementById('line-' + lineIdx);
-                    const oldLineElement = document.getElementById('line-' + currentLineIndex);
+                // ตรวจสอบว่าถึงเวลาของคำปัจจุบันแล้วหรือยัง (เผื่อเวลาบัฟเฟอร์ 0.05s)
+                if (currentTime >= wordStartTime - 0.05) {
                     
-                    if(oldLineElement) {
-                        oldLineElement.classList.remove('current-line');
-                        oldLineElement.classList.add('non-current-line');
-                    }
+                    // 1. จัดการ Highlighting และ Scrolling
+                    highlightWordAndScroll(currentWordIndex, lineIdx);
                     
-                    if (newLineElement) {
-                        const lineTop = newLineElement.offsetTop;
-                        const scrollOffset = 240; 
-                        const scrollAmount = lineTop - scrollOffset;
-                        
-                        document.getElementById('lyrics-container').style.transform = `translateY(-${Math.max(0, scrollAmount)}px)`;
-                        
-                        newLineElement.classList.add('current-line');
-                        newLineElement.classList.remove('non-current-line');
-                        currentLineIndex = lineIdx;
-                    }
-                }
-
-                // --- Highlighting ---
-                if (word && word !== 'R') {
-                    let wordElement = null;
-                    
+                    // 2. จัดการคำถามแบบเติมคำ
                     if (isGap) {
-                        wordElement = document.getElementById('gap-word-' + currentGapIndex);
-                    } else {
-                        let textIndex = 0;
-                        for (let i = 0; i < currentSongData.data.length; i++) {
-                            const [n, d, w] = currentSongData.data[i];
-                            if (w && w !== 'R') {
-                                if (i === index) {
-                                    wordElement = document.getElementById('synced-word-' + textIndex);
-                                    break;
-                                }
-                                textIndex++;
-                            }
-                        }
+                         // ค้นหาเวลาสิ้นสุดของคำ GAP (ใช้เวลาเริ่มต้นของคำถัดไป)
+                        let nextWordStartTime = (currentWordIndex + 1 < data.length) ? data[currentWordIndex + 1][0] : currentTime + 1.5;
+                        let gapDuration = nextWordStartTime - wordStartTime;
+                        
+                        handleGapWord(gapDuration * 1000); 
                     }
                     
-                    if (wordElement) {
-                         wordElement.classList.add('highlighted');
+                    currentWordIndex++; 
+                } else {
+                    break; 
+                }
+            }
+
+            // 4. ตรวจสอบเมื่อเพลงจบ
+            if (audioPlayer.ended) {
+                clearInterval(syncInterval);
+                isPlaying = false;
+                document.getElementById('status').textContent = `จบเพลงแล้ว! ดูสรุปผล...`;
+                document.getElementById('choices-container').innerHTML = '';
+                showSummary(); 
+            }
+        }
+
+        function highlightWordAndScroll(index, lineIdx) {
+            const previousWordElement = document.querySelector(`.lyric-line .highlighted`);
+            if (previousWordElement) {
+                previousWordElement.classList.remove('highlighted');
+            }
+
+            // --- Scrolling Logic ---
+            if (lineIdx && lineIdx !== currentLineIndex) {
+                const newLineElement = document.getElementById('line-' + lineIdx);
+                const oldLineElement = document.getElementById('line-' + currentLineIndex);
+                
+                if(oldLineElement) {
+                    oldLineElement.classList.remove('current-line');
+                    oldLineElement.classList.add('non-current-line');
+                }
+                
+                if (newLineElement) {
+                    const lineTop = newLineElement.offsetTop;
+                    const scrollOffset = 240; 
+                    const scrollAmount = lineTop - scrollOffset;
+                    
+                    document.getElementById('lyrics-container').style.transform = `translateY(-${Math.max(0, scrollAmount)}px)`;
+                    
+                    newLineElement.classList.add('current-line');
+                    newLineElement.classList.remove('non-current-line');
+                    currentLineIndex = lineIdx;
+                }
+            }
+
+            // --- Highlighting ---
+            const data = currentSongData.data[index];
+            const word = data[1];
+            const isGap = data[2];
+
+            if (word) {
+                let wordElement = null;
+                
+                if (isGap) {
+                    wordElement = document.getElementById('gap-word-' + currentGapIndex);
+                } else {
+                    let textIndex = 0;
+                    for (let i = 0; i < currentSongData.data.length; i++) {
+                        const [t, w, iG] = currentSongData.data[i];
+                        if (w && w !== 'R') {
+                            if (i === index) {
+                                wordElement = document.getElementById('synced-word-' + textIndex);
+                                break;
+                            }
+                            if (!iG) textIndex++;
+                        }
                     }
                 }
                 
-                // --- Gap Index Management (สำคัญ: จัดการเมื่อผ่านคำโจทย์ไปแล้ว) ---
-                if (isGap) {
-                    const gapElement = document.getElementById('gap-word-' + currentGapIndex);
-                    
-                    // คำนวณจำนวน GAP ทั้งหมด
-                    const totalGaps = currentSongData.data.filter(item => item[3] === true).length;
-
-                    const waitDurationMs = currentSongData.data[index][1] * secondsPerBeat * 1000;
-                    
-                    setTimeout(() => {
-                        // 1. จัดการ Timeout หากผู้เล่นยังไม่ตอบ
-                        if (gapElement && gapElement.dataset.guessed === 'false') {
-                             handleTimeout(gapElement);
-                        }
-                        
-                        // 2. เลื่อนไปยัง Gap ถัดไปทันที และแสดงตัวเลือกใหม่ (ล่วงหน้า)
-                        currentGapIndex++;
-                        if (currentGapIndex < totalGaps) { // ใช้ totalGaps ที่คำนวณมา
-                            const nextGapElement = document.getElementById('gap-word-' + currentGapIndex);
-                            if (nextGapElement) {
-                                const choices = JSON.parse(nextGapElement.dataset.choices);
-                                const correct = nextGapElement.dataset.correct;
-                                showChoices(nextGapElement, choices, correct);
-                            }
-                        }
-                    }, waitDurationMs);
+                if (wordElement) {
+                    wordElement.classList.add('highlighted');
                 }
+            }
+        }
 
-            }, delay);
+        function handleGapWord(waitDurationMs) {
+            const gapElement = document.getElementById('gap-word-' + currentGapIndex);
+            
+            // 1. แสดงตัวเลือกทันที
+            if (gapElement) {
+                const choices = JSON.parse(gapElement.dataset.choices);
+                const correct = gapElement.dataset.correct;
+                showChoices(gapElement, choices, correct);
+            }
+            
+            // 2. ตั้ง Timeout สำหรับการตอบ
+            setTimeout(() => {
+                if (gapElement && gapElement.dataset.guessed === 'false') {
+                    handleTimeout(gapElement);
+                }
+                currentGapIndex++; // เลื่อนไปยัง Gap ถัดไป
+            }, waitDurationMs);
         }
 
         function showChoices(wordElement, choices, correctWord) {
@@ -584,7 +546,7 @@
         }
         
         // ----------------------------------------------------
-        // 4. ฟังก์ชันการจัดการหน้า (Menu & Summary) - ไม่มีเปลี่ยนแปลง
+        // 4. ฟังก์ชันการจัดการหน้า (Menu & Summary)
         // ----------------------------------------------------
         
         function showSummary() {
@@ -635,14 +597,18 @@
             document.getElementById('status').textContent = 'พร้อมเริ่มเกม';
             document.getElementById('choices-container').innerHTML = '';
             
-            if (audioContext) {
-                 audioContext.close();
-                 audioContext = null;
+            if (audioPlayer) {
+                 audioPlayer.pause();
+                 audioPlayer = null;
+            }
+            if (syncInterval) {
+                 clearInterval(syncInterval);
+                 syncInterval = null;
             }
         }
 
         // ----------------------------------------------------
-        // 5. ฟังก์ชันควบคุมการโหลดและเริ่มเกม - มีการปรับปรุง
+        // 5. ฟังก์ชันควบคุมการโหลดและเริ่มเกม
         // ----------------------------------------------------
 
         function loadSongAndStartGame(songKey) {
@@ -661,84 +627,53 @@
             document.getElementById('choices-container').style.display = 'none';
             document.getElementById('playButton').onclick = startGame; 
 
-            initializeLyrics(currentSongData); // โหลดเนื้อเพลง
+            initializeLyrics(currentSongData); 
             document.getElementById('lyrics-container').style.transform = `translateY(0)`;
         }
 
 
         function startGame() {
-            if (!currentSongData) return; // ป้องกันการเริ่มเกมโดยไม่มีเพลง
+            if (!currentSongData || isPlaying) return; 
             
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            // 1. Setup Audio Player
+            if (!audioPlayer) {
+                audioPlayer = new Audio(currentSongData.audioUrl);
             }
+            audioPlayer.currentTime = 0;
+            audioPlayer.volume = 0.8; 
 
-            // ซ่อนปุ่มเริ่มเล่น และแสดง Choices Container ทันที
-            document.getElementById('start-button-container').style.display = 'none';
-            document.getElementById('choices-container').style.display = 'flex';
-            
-            if (audioContext.state === 'suspended') {
-                audioContext.resume().then(() => {
-                    executeGameFlow();
-                });
-            } else {
-                executeGameFlow();
-            }
-        }
-
-        function executeGameFlow() {
-            if (isPlaying) return;
+            // 2. Reset Game State
             isPlaying = true;
             score = 0;
             currentGapIndex = 0;
             currentLineIndex = -1;
+            currentWordIndex = 0;
             guessResults.length = 0;
             document.getElementById('score-display').textContent = 'คะแนน: 0';
-            document.getElementById('status').textContent = 'กำลังเล่น...';
-            
-            initializeLyrics(currentSongData); // โหลดเนื้อเพลงอีกครั้งเมื่อเริ่มเกมใหม่
+            document.getElementById('status').textContent = 'กำลังโหลดเพลง...';
+            initializeLyrics(currentSongData);
             document.getElementById('lyrics-container').style.transform = `translateY(0)`;
-
-            musicStartTime = audioContext.currentTime;
-            let currentTime = musicStartTime;
+            document.getElementById('start-button-container').style.display = 'none';
+            document.getElementById('choices-container').style.display = 'flex';
             
-            // แสดงตัวเลือกของ GAP 1 ล่วงหน้าก่อนเริ่มเพลง
-            const firstGapElement = document.getElementById('gap-word-0');
-            if (firstGapElement) {
-                const choices = JSON.parse(firstGapElement.dataset.choices);
-                const correct = firstGapElement.dataset.correct;
-                showChoices(firstGapElement, choices, correct);
-            }
-
-            const oscillatorType = currentSongData.oscillatorType || 'triangle'; // ดึงประเภทคลื่น
-
-            currentSongData.data.forEach((data, index) => {
-                const frequency = noteFrequencies[data[0]];
-                const duration = data[1] * secondsPerBeat;
-                
-                // ส่ง oscillatorType ไปใน playNote
-                playNote(frequency, currentTime, duration, oscillatorType);
-                
-                const delayMs = (currentTime - musicStartTime) * 1000;
-                updateLyrics(index, delayMs);
-                
-                currentTime += duration;
-            });
-
-            const totalDuration = currentTime - musicStartTime;
-
-            setTimeout(() => {
+            // 3. Play and Sync
+            audioPlayer.play().then(() => {
+                document.getElementById('status').textContent = 'กำลังเล่น...';
+                // ตั้ง interval เพื่อตรวจสอบเวลาเล่นเพลงทุก 50ms
+                syncInterval = setInterval(syncLyrics, 50); 
+            }).catch(error => {
+                document.getElementById('status').textContent = `⚠️ Error: ไม่สามารถโหลดเพลงได้ (ตรวจสอบลิงก์)`;
+                console.error("Audio Playback Error:", error);
                 isPlaying = false;
-                document.getElementById('status').textContent = `จบเพลงแล้ว! ดูสรุปผล...`;
-                document.getElementById('choices-container').innerHTML = '';
-                showSummary(); 
-            }, totalDuration * 1000 + 500); 
+                document.getElementById('start-button-container').style.display = 'block'; 
+                document.getElementById('choices-container').style.display = 'none';
+            });
         }
 
         // ----------------------------------------------------
         // 6. การเริ่มต้น
         // ----------------------------------------------------
-        goToMainMenu(); // เริ่มต้นด้วยการแสดงหน้าหลัก
+        goToMainMenu(); 
     </script>
 </body>
 </html>
