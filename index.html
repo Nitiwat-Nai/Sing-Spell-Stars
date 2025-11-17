@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎤 Sing & Spell Stars (GitHub MIDI Sync)</title>
+    <title>🎤 Sing & Spell Stars (Fixed Loading & Thai Translation)</title>
     <style>
-        /* --- Styles remains the same for consistency --- */
         @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600&display=swap');
 
         body {
@@ -101,6 +100,17 @@
             justify-content: center;
             align-items: center;
             margin-top: 20px;
+            flex-direction: column; 
+        }
+
+        #choices-container {
+             display: flex; 
+             flex-direction: row; 
+             flex-wrap: wrap;
+             justify-content: center;
+             align-items: center;
+             min-height: 60px;
+             padding: 10px;
         }
 
         .menu-button, button#playButton {
@@ -120,13 +130,10 @@
             transform: translateY(4px);
         }
         
-        #choices-container {
-            min-height: 60px;
-        }
         .choice-button {
             padding: 15px 30px;
             font-size: 1.2em;
-            margin: 0 10px;
+            margin: 10px 10px; 
             background-color: #B0E0E6; 
             color: #333;
             border: 3px solid #6495ED;
@@ -241,10 +248,10 @@
         const songsData = {
             "jinglebells": {
                 title: "🎶 Jingle Bells (MIDI Sync)",
-                // ใช้ URL ดิบ (Raw URL) ของไฟล์ MIDI จาก GitHub
-                midiUrl: "https://raw.githubusercontent.com/Nitiwat-Nai/Sing-Spell-Stars/main/Jingle%20Bells.mid", 
+                // ใช้ Local Path (ต้องมีไฟล์ Jingle Bells.mid ในโฟลเดอร์เดียวกัน)
+                midiUrl: "Jingle Bells.mid", 
                 
-                // ข้อมูลเนื้อเพลงและ Gap (ถอดรหัสจาก B002180.lyr และปรับจังหวะตาม MIDI)
+                // ข้อมูลเนื้อเพลงและ Gap
                 data: [
                     // [คำศัพท์, เป็นคำที่ต้องเดา, {ข้อมูลการเดา}, Line Index]
                     // คำ/Line 1 (DASHING THROUGH THE SNOW)
@@ -331,12 +338,11 @@
                             wordSpan.dataset.index = wordCounter;
                             wordSpan.dataset.correct = gapData.correct;
                             wordSpan.dataset.choices = JSON.stringify(gapData.choices);
-                            wordSpan.dataset.thai = gapData.thai;
+                            wordSpan.dataset.thai = gapData.thai; 
                             wordSpan.dataset.guessed = 'false'; 
                             wordCounter++;
                         } else {
-                            // ใช้ index ของคำศัพท์ที่ไม่ใช่ Gap เพื่อซิงค์กับโน้ต
-                            wordSpan.id = 'synced-word-' + totalWordIndex;
+                            wordSpan.id = 'synced-word-' + wordCounter; 
                         }
                         
                         lineDiv.appendChild(wordSpan);
@@ -390,20 +396,9 @@
             let wordElement = null;
             
             if (isGap) {
-                // หากเป็น Gap ให้ใช้ index ของ Gap
-                wordElement = document.getElementById('gap-word-' + (currentGapIndex > 0 ? currentGapIndex - 1 : 0));
+                wordElement = document.getElementById('gap-word-' + currentGapIndex);
             } else {
-                // หากไม่เป็น Gap ให้ใช้ index ของคำที่ไม่ใช่ Gap
-                let nonGapIndex = 0;
-                for (let i = 0; i <= index; i++) {
-                    if (!currentSongData.data[i][1]) { // ตรวจสอบ isGap
-                         if (i === index) {
-                            wordElement = document.getElementById('synced-word-' + nonGapIndex);
-                            break;
-                         }
-                        nonGapIndex++;
-                    }
-                }
+                wordElement = document.getElementById('synced-word-' + index);
             }
             
             if (wordElement) {
@@ -420,12 +415,11 @@
                 showChoices(gapElement, choices, correct);
             }
             
-            // ตั้ง Timeout สำหรับการตอบคำถาม
             setTimeout(() => {
                 if (gapElement && gapElement.dataset.guessed === 'false') {
                     handleTimeout(gapElement);
                 }
-                currentGapIndex++; // เลื่อนไปยัง Gap ถัดไป
+                currentGapIndex++; 
             }, durationMs);
         }
         
@@ -434,9 +428,11 @@
         // ----------------------------------------------------
 
         function setupMIDISync() {
-            // MIDI.js ต้องโหลด soundfont ก่อน (ใช้ soundfont จากเซิร์ฟเวอร์สาธารณะ)
+            // MIDI.js ต้องโหลด soundfont ก่อน (ใช้ soundfont จากเซิร์ฟเวอร์สาธารณะที่เสถียรกว่า)
             MIDI.loadPlugin({
-                soundfontUrl: "https://midijs.net/soundfont/render/", 
+                // **** แก้ไข SoundFont URL เพื่อความเสถียร แก้ปัญหาโหลด 0% ****
+                soundfontUrl: "https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/", 
+                // ************************************************************
                 instrument: "acoustic_grand_piano",
                 onprogress: function(state, progress) {
                     document.getElementById('status').textContent = `กำลังโหลดเครื่องดนตรี: ${Math.round(progress * 100)}%`;
@@ -445,34 +441,27 @@
                     document.getElementById('status').textContent = 'พร้อมเล่น MIDI';
                     document.getElementById('playButton').style.display = 'block';
                     
-                    // อ่านไฟล์ MIDI จาก URL
                     MIDI.Player.loadFile(currentSongData.midiUrl, function() {
                         const noteEvents = MIDI.Player.data.trackEvents.flat();
                         
-                        // กรองเฉพาะโน้ตที่มีเสียง (NoteOn)
                         let noteTimestamps = [];
                         noteEvents.forEach(track => {
                              track.forEach(event => {
                                 if (event.event.type === 'noteOn' && event.event.velocity > 0) {
                                     noteTimestamps.push({ 
                                         time: event.time, 
-                                        duration: event.event.duration || 0.2, // ใช้ 0.2s เป็นค่า Default
+                                        duration: event.event.duration || 0.2, 
                                         note: event.event.note 
                                     });
                                 }
                             });
                         });
                         
-                        // เรียงตามเวลา
                         noteTimestamps.sort((a, b) => a.time - b.time);
                         
-                        // สร้างการจับคู่คำกับเวลาของโน้ต (ใช้โน้ตหลัก)
-                        // Note: นี่เป็นการประมาณเวลาเนื่องจากไม่มีไฟล์ LRC ที่แม่นยำ
                         let syncMap = [];
                         let lyricsIndex = 0;
-                        
-                        // ใช้โน้ตหลัก (ไม่ใช่โน้ตคอร์ด)
-                        const melodyNotes = noteTimestamps.filter(n => n.note >= 60); // กรองโน้ตที่สูงพอจะเป็น Melody
+                        const melodyNotes = noteTimestamps.filter(n => n.note >= 60); 
 
                         for (let i = 0; i < currentSongData.data.length && lyricsIndex < melodyNotes.length; i++) {
                             syncMap.push({
@@ -483,7 +472,6 @@
                             lyricsIndex++;
                         }
 
-                        // เริ่มเกมได้เมื่อโหลดเสร็จ
                         document.getElementById('playButton').onclick = function() {
                             startGameMIDISync(syncMap);
                         };
@@ -507,10 +495,8 @@
 
             initializeLyrics(currentSongData);
 
-            // 1. เริ่มเล่นเพลง MIDI
             MIDI.Player.start();
 
-            // 2. เริ่มการซิงโครไนซ์เนื้อเพลง
             syncMap.forEach((item, index) => {
                 const [word, isGap, gapData, lineIdx] = item.data;
                 const delayMs = item.time * 1000;
@@ -525,8 +511,6 @@
                 }, delayMs);
             });
 
-
-            // 3. ตั้ง Timeout เมื่อเพลงจบ
             MIDI.Player.addListener(function(data) {
                 if (data.status === 'end') {
                     isPlaying = false;
@@ -543,6 +527,16 @@
         function showChoices(wordElement, choices, correctWord) {
             const choicesContainer = document.getElementById('choices-container');
             choicesContainer.innerHTML = ''; 
+            
+            const thaiMeaning = wordElement.dataset.thai;
+            const instructionDiv = document.createElement('div');
+            instructionDiv.style.marginBottom = '15px';
+            instructionDiv.style.fontSize = '1.1em';
+            instructionDiv.style.fontWeight = 'bold';
+            instructionDiv.style.color = '#483D8B';
+            instructionDiv.textContent = `คำที่ต้องเติม (ความหมาย: ${thaiMeaning})`;
+            choicesContainer.appendChild(instructionDiv);
+            
             choices.forEach(choice => {
                 const button = document.createElement('button');
                 button.className = 'choice-button active'; 
@@ -594,7 +588,7 @@
             const headerDiv = document.createElement('div');
             headerDiv.className = 'summary-item';
             headerDiv.style.fontWeight = 'bold';
-            headerDiv.innerHTML = `<span class="summary-word">คำศัพท์ / คำแปล</span><span class="summary-status">สถานะ</span>`;
+            headerDiv.innerHTML = `<span class="summary-word">คำศัพท์ (คำแปล)</span><span class="summary-status">สถานะ</span>`;
             summaryList.appendChild(headerDiv);
 
             guessResults.forEach(item => {
@@ -603,7 +597,7 @@
                 const statusClass = item.status === 'ถูก' ? 'correct-ans' : 'wrong-ans';
                 let displayStatus = (item.status === 'ถูก' ? 'ถูก' : (item.status === 'ผิด' ? 'ผิด' : 'หมดเวลา'));
 
-                div.innerHTML = `<span class="summary-word">${item.word} (${item.thai})</span>
+                div.innerHTML = `<span class="summary-word">${item.word} **(${item.thai})**</span>
                                  <span class="summary-status ${statusClass}">${displayStatus}</span>`;
                 summaryList.appendChild(div);
             });
@@ -644,7 +638,6 @@
             initializeLyrics(currentSongData); 
             document.getElementById('lyrics-container').style.transform = `translateY(0)`;
             
-            // เริ่มโหลด MIDI และ Soundfont
             setupMIDISync();
         }
 
