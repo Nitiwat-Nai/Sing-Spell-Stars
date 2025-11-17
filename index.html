@@ -249,125 +249,119 @@
             'R': 0 
         };
 
-        // ** โครงสร้างข้อมูลเพลงทั้งหมด **
+        // ** โครงสร้างข้อมูลเพลงทั้งหมด (ปรับปรุงจังหวะและโทนเสียง) **
         const songsData = {
             "jinglebells": {
-                title: "Jingle Bells (Adjusted Tempo)",
+                title: "🎶 Jingle Bells (Optimized Square Wave)",
+                // โทนเสียงที่ใช้: 'square'
+                oscillatorType: 'square',
                 data: [
                     // [โน้ต, จังหวะ, 'คำศัพท์', เป็นคำที่ต้องเดา, {ข้อมูลการเดา (Correct, Choices, Thai)}, Line Index]
                     
-                    // Stanza 1: Dashing through the snow...
+                    // Stanza 1 (Melody E-E-E)
                     ['E4', 0.5, 'Dash', false, null, 1], ['E4', 0.5, 'ing', false, null, 1], ['E4', 1.0, 'through', false, null, 1], 
                     ['E4', 0.5, 'the', false, null, 1], ['E4', 0.5, 'snow,', true, { correct: 'snow,', choices: ['snow,', 'slow,'], thai: 'หิมะ' }, 1], ['R', 1.0, '', false, null, 1], // **GAP 1**
                     ['E4', 0.5, 'in', false, null, 1], ['E4', 0.5, 'a', false, null, 1], ['E4', 1.0, 'one-', false, null, 1], 
                     ['E4', 0.5, 'horse', false, null, 1], ['E4', 0.5, 'open', false, null, 1], ['R', 0.5, '', false, null, 1], ['G4', 1.5, 'sleigh!', false, null, 1], ['R', 0.5, '', false, null, 1],
                     
+                    // Stanza 2 (Melody G-G-G-G-A-A-A-A-G-G-F-D) - ปรับ Octave ตามมาตรฐาน
                     ['G4', 0.5, "O'er", false, null, 2], ['G4', 0.5, 'the', false, null, 2], ['G4', 1.0, 'fields', false, null, 2], 
                     ['G4', 0.5, 'we', false, null, 2], ['G4', 0.5, 'go,', false, null, 2], ['R', 1.0, '', false, null, 2], 
                     ['A4', 0.5, 'laugh', false, null, 2], ['A4', 0.5, 'ing', false, null, 2], ['A4', 1.0, 'all', false, null, 2], 
-                    ['A4', 0.5, 'the', false, null, 2], ['A4', 0.5, 'way;', false, null, 2], ['R', 0.5, '', false, null, 2], ['E4', 1.5, 'Oh!', false, null, 2], ['R', 0.5, '', false, null, 2],
+                    ['A4', 0.5, 'the', false, null, 2], ['A4', 0.5, 'way;', false, null, 2], ['R', 0.5, '', false, null, 2], ['G4', 1.5, 'Oh!', false, null, 2], ['R', 0.5, '', false, null, 2],
                     
+                    // Stanza 3 (Melody Fs-Fs-Fs)
                     ['Fs4', 0.5, 'Bells', true, { correct: 'Bells', choices: ['Bells', 'Balls'], thai: 'กระดิ่ง' }, 3], ['Fs4', 0.5, 'on', false, null, 3], ['Fs4', 1.0, 'bob-', false, null, 3], // **GAP 2**
                     ['Fs4', 0.5, 'tail', false, null, 3], ['Fs4', 0.5, 'ring,', false, null, 3], ['R', 1.0, '', false, null, 3], 
                     ['E4', 0.5, 'mak', false, null, 3], ['E4', 0.5, 'ing', false, null, 3], ['E4', 1.0, 'spirits', false, null, 3], 
                     ['E4', 0.5, 'bright,', false, null, 3], ['D4', 0.5, '', false, null, 3], ['R', 0.5, '', false, null, 3], ['D4', 1.5, 'Oh!', false, null, 3], ['R', 0.5, '', false, null, 3],
                     
+                    // Stanza 4 (Melody C-C-C)
                     ['C4', 0.5, 'what', false, null, 4], ['C4', 0.5, 'fun', false, null, 4], ['C4', 1.0, 'it', false, null, 4], 
                     ['C4', 0.5, 'is', false, null, 4], ['C4', 0.5, 'to', false, null, 4], ['R', 0.5, '', false, null, 4], 
                     ['D4', 0.5, 'ride', false, null, 4], ['D4', 0.5, 'and', false, null, 4], ['D4', 1.0, 'sing', true, { correct: 'sing', choices: ['sing', 'sink'], thai: 'ร้องเพลง' }, 4], // **GAP 3**
                     ['E4', 0.5, 'a', false, null, 4], ['E4', 0.5, 'sleigh', false, null, 4], ['R', 0.5, '', false, null, 4], ['G4', 1.5, 'ing', false, null, 4], ['R', 0.5, '', false, null, 4],
                     
-                    // Chorus: Jingle bells, jingle bells... (Melody: E-E-E, E-E-E, E-G-C-D-E)
+                    // Chorus (Melody G-G-G, G-G-G, G-A-F-D-C) - แก้โน้ตและจังหวะให้ตรงกับมาตรฐาน
                     ['G4', 0.5, 'Jin', false, null, 5], ['G4', 0.5, 'gle', false, null, 5], ['G4', 1.0, 'bells,', false, null, 5], 
                     ['G4', 0.5, 'jin', false, null, 5], ['G4', 0.5, 'gle', false, null, 5], ['G4', 1.0, 'bells,', false, null, 5], 
-                    ['G4', 0.5, 'jin', false, null, 5], ['B4', 0.5, 'gle', false, null, 5], ['D4', 0.5, 'all', false, null, 5], ['C4', 0.5, 'the', false, null, 5], 
-                    ['A4', 1.5, 'way!', false, null, 5], ['R', 0.5, 'Oh,', true, { correct: 'Oh,', choices: ['Oh,', 'Go,'], thai: 'โอ้' }, 5], // **GAP 4**
+                    ['G4', 0.5, 'jin', false, null, 5], ['A4', 0.5, 'gle', false, null, 5], ['F4', 0.5, 'all', false, null, 5], ['D4', 0.5, 'the', false, null, 5], 
+                    ['C4', 1.5, 'way!', false, null, 5], ['R', 0.5, 'Oh,', true, { correct: 'Oh,', choices: ['Oh,', 'Go,'], thai: 'โอ้' }, 5], // **GAP 4**
 
                     ['G4', 0.5, 'what', false, null, 6], ['G4', 0.5, 'fun', false, null, 6], ['G4', 1.0, 'it', false, null, 6], 
-                    ['F4', 0.5, 'is', false, null, 6], ['F4', 0.5, 'to', false, null, 6], ['F4', 0.5, 'ride', false, null, 6], 
-                    ['F4', 0.5, 'in', false, null, 6], ['E4', 0.5, 'a', false, null, 6], ['E4', 0.5, 'one', false, null, 6], ['E4', 0.5, 'horse', false, null, 6], 
-                    ['D4', 1.5, 'open', true, { correct: 'open', choices: ['open', 'oven'], thai: 'เปิด' }, 6], ['R', 0.5, 'sleigh!', false, null, 6], // **GAP 5**
-
-                    // Chorus Repeat (Melody: F-F-F, F-F-F, F-E-D-C-F)
+                    ['F4', 0.5, 'is', false, null, 6], ['F4', 0.5, 'to', false, null, 6], ['E4', 0.5, 'ride', false, null, 6], 
+                    ['E4', 0.5, 'in', false, null, 6], ['D4', 0.5, 'a', false, null, 6], ['D4', 0.5, 'one', false, null, 6], ['D4', 0.5, 'horse', false, null, 6], 
+                    ['C4', 1.5, 'open', true, { correct: 'open', choices: ['open', 'oven'], thai: 'เปิด' }, 6], ['R', 0.5, 'sleigh!', false, null, 6], // **GAP 5**
+                    
+                    // Outro (Final Jingle Bells)
                     ['G4', 0.5, 'Jin', false, null, 7], ['G4', 0.5, 'gle', false, null, 7], ['G4', 1.0, 'bells,', false, null, 7], 
                     ['G4', 0.5, 'jin', false, null, 7], ['G4', 0.5, 'gle', false, null, 7], ['G4', 1.0, 'bells,', false, null, 7], 
-                    ['G4', 0.5, 'jin', false, null, 7], ['B4', 0.5, 'gle', false, null, 7], ['D4', 0.5, 'all', false, null, 7], ['C4', 0.5, 'the', false, null, 7], 
-                    ['A4', 1.5, 'way!', false, null, 7], ['R', 0.5, 'Oh,', false, null, 7], // **GAP 6**
-                    
-                    ['G4', 0.5, 'what', false, null, 8], ['G4', 0.5, 'fun', false, null, 8], ['F4', 1.0, 'it', false, null, 8], 
-                    ['E4', 0.5, 'is', false, null, 8], ['E4', 0.5, 'to', false, null, 8], ['D4', 0.5, 'ride', false, null, 8], 
-                    ['D4', 0.5, 'in', false, null, 8], ['D4', 0.5, 'a', false, null, 8], ['D4', 0.5, 'one', false, null, 8], ['D4', 0.5, 'horse', false, null, 8], 
-                    ['C4', 2.0, 'open', false, null, 8], ['R', 1.0, 'sleigh!', false, null, 8], // **GAP 7**
-
-                    // Bridge (Melody: G-G-G-G-A-A-A-A-G-G-F-D)
-                    ['E4', 0.5, 'We', false, null, 9], ['E4', 0.5, 'are', false, null, 9], ['E4', 1.0, 'full', false, null, 9], 
-                    ['E4', 1.0, 'of', false, null, 9], ['E4', 0.5, 'joy', true, { correct: 'joy', choices: ['joy', 'toy'], thai: 'ความสุข' }, 9], ['R', 1.5, '', false, null, 9], // **GAP 8**
-                    
-                    ['G4', 0.5, 'Hear', false, null, 10], ['G4', 0.5, 'the', false, null, 10], ['G4', 1.0, 'merrily', true, { correct: 'merrily', choices: ['merrily', 'military'], thai: 'อย่างสนุกสนาน' }, 10], 
-                    ['G4', 1.0, 'singing', false, null, 10], ['G4', 1.0, 'loud.', false, null, 10], ['R', 1.0, '', false, null, 10], // **GAP 9**
-                    
-                    ['D4', 0.5, 'And', false, null, 11], ['D4', 0.5, 'the', false, null, 11], ['D4', 1.0, 'bells', false, null, 11], 
-                    ['D4', 1.0, 'go', false, null, 11], ['D4', 1.0, 'ding-a-ling', true, { correct: 'ding-a-ling', choices: ['ding-a-ling', 'sing-a-ling'], thai: 'เสียงดังของกระดิ่ง' }, 11], ['R', 1.0, '', false, null, 11], // **GAP 10**
-
-                    ['C4', 1.0, 'Christmas', false, null, 12], ['R', 0.5, 'time!', false, null, 12], ['R', 0.5, '', false, null, 12] 
+                    ['G4', 0.5, 'jin', false, null, 7], ['A4', 0.5, 'gle', false, null, 7], ['F4', 0.5, 'all', false, null, 7], ['D4', 0.5, 'the', false, null, 7], 
+                    ['C4', 4.0, 'way!', false, null, 7] // โน้ตจบยาว 4.0 (Whole Note)
                 ]
             },
             "wewish": {
-                title: "We Wish You A Merry Christmas (Adjusted Tempo)",
+                title: "🎄 We Wish You A Merry Christmas (Optimized Sine Wave)",
+                 // โทนเสียงที่ใช้: 'sine'
+                oscillatorType: 'sine',
                 data: [
                     // [โน้ต, จังหวะ, 'คำศัพท์', เป็นคำที่ต้องเดา, {ข้อมูลการเดา (Correct, Choices, Thai)}, Line Index]
-                    // --- BARS 1-4 (โน้ต 0.5 ทั้งหมด)
+                    // --- BARS 1-4 (G-C-C-D | C-B-A-G)
                     ['G4', 0.5, 'We', false, null, 1], ['C5', 0.5, 'wish', false, null, 1], ['C5', 0.5, 'you', false, null, 1], ['D5', 0.5, 'a', false, null, 1], 
                     ['C5', 0.5, 'mer-', false, null, 1], ['B4', 0.5, 'ry', false, null, 1], ['A4', 0.5, 'Christ-', true, { correct: 'Christ-', choices: ['Christ-', 'Cross-'], thai: 'คริสต์' }, 1], ['G4', 0.5, 'mas,', false, null, 1], // **GAP 1**
-                    ['G4', 0.5, 'we', false, null, 2], ['C5', 0.5, 'wish', false, null, 2], ['C5', 0.5, 'you', false, null, 2], ['D5', 0.5, 'a', false, null, 2], 
-                    ['C5', 0.5, 'mer-', false, null, 2], ['B4', 0.5, 'ry', false, null, 2], ['A4', 0.5, 'Christ-', false, null, 2], ['G4', 0.5, 'mas,', true, { correct: 'mas,', choices: ['mas,', 'man,'], thai: 'มาส' }, 2], // **GAP 2**
+                    ['R', 0.5, '', false, null, 2], ['G4', 0.5, 'we', false, null, 2], ['C5', 0.5, 'wish', false, null, 2], ['C5', 0.5, 'you', false, null, 2], 
+                    ['D5', 0.5, 'a', false, null, 2], ['C5', 0.5, 'mer-', false, null, 2], ['B4', 0.5, 'ry', false, null, 2], ['A4', 0.5, 'Christ-', false, null, 2], ['G4', 0.5, 'mas,', true, { correct: 'mas,', choices: ['mas,', 'man,'], thai: 'มาส' }, 2], // **GAP 2**
 
-                    // --- BARS 5-8 (เริ่มมีการใช้โน้ต Quarter Note 1.0)
-                    ['E4', 0.5, 'we', false, null, 3], ['E4', 0.5, 'wish', false, null, 3], ['F4', 0.5, 'you', false, null, 3], ['F4', 0.5, 'a', false, null, 3], 
+                    // --- BARS 5-8 (E-E-F-F | G-E-D-C)
+                    ['R', 0.5, '', false, null, 3], ['E4', 0.5, 'we', false, null, 3], ['E4', 0.5, 'wish', false, null, 3], ['F4', 0.5, 'you', false, null, 3], ['F4', 0.5, 'a', false, null, 3], 
                     ['G4', 0.5, 'mer-', false, null, 3], ['E4', 0.5, 'ry', false, null, 3], ['D4', 0.5, 'Christ-', false, null, 3], ['C4', 0.5, 'mas', false, null, 3], 
                     ['R', 0.5, 'and', false, null, 4], ['G4', 0.5, 'a', false, null, 4], ['G4', 0.5, 'hap-', false, null, 4], ['G4', 0.5, 'py', true, { correct: 'py', choices: ['py', 'day'], thai: 'มีความสุข' }, 4], // **GAP 3**
-                    ['A4', 1.0, 'New', false, null, 4], ['R', 0.5, 'Year!', false, null, 4], ['R', 0.5, 'Good', false, null, 4], // โน้ตตัวดำ 1.0 + ตัวหยุด 0.5
+                    ['A4', 1.0, 'New', false, null, 4], ['G4', 1.0, 'Year!', false, null, 4], ['R', 1.0, '', false, null, 4], 
 
-                    // --- BARS 9-12 (โน้ตตัวดำ 1.0 ในบางคำ)
-                    ['B4', 0.5, 'tid', true, { correct: 'tid', choices: ['tid', 'try'], thai: 'ข่าว' }, 5], ['B4', 0.5, '-ings', false, null, 5], ['C5', 0.5, 'we', false, null, 5], ['A4', 0.5, 'bring', false, null, 5], // **GAP 4**
-                    ['G4', 0.5, 'to', false, null, 6], ['D4', 0.5, 'you', false, null, 6], ['E4', 0.5, 'and', false, null, 6], ['F4', 0.5, 'your', false, null, 6], 
-                    ['D4', 1.0, 'kin;', true, { correct: 'kin;', choices: ['kin;', 'king;'], thai: 'ญาติ' }, 6], ['G4', 1.0, 'Good', false, null, 6], // โน้ตตัวดำ 1.0 **GAP 5**
+                    // --- BARS 9-12 (B-B-C-A | G-D-E-F | D-G)
+                    ['R', 0.5, 'Good', false, null, 5], ['B4', 0.5, 'tid', true, { correct: 'tid', choices: ['tid', 'try'], thai: 'ข่าว' }, 5], ['B4', 0.5, '-ings', false, null, 5], ['C5', 0.5, 'we', false, null, 5], ['A4', 0.5, 'bring', false, null, 5], // **GAP 4**
+                    ['R', 0.5, 'to', false, null, 6], ['G4', 0.5, 'you', false, null, 6], ['D4', 0.5, 'and', false, null, 6], ['E4', 0.5, 'your', false, null, 6], ['F4', 0.5, 'kin;', false, null, 6], 
+                    ['D4', 1.0, 'Good', true, { correct: 'Good', choices: ['Good', 'Gold'], thai: 'ดี' }, 6], ['G4', 1.0, 'tidings', false, null, 6], ['R', 1.0, '', false, null, 6], // **GAP 5**
 
-                    // --- BARS 13-16 (โน้ตตัวดำ 1.0 + โน้ตตัวขาว 2.0)
+                    // --- BARS 13-16 (D-D-E-D | C-A-A-G)
                     ['D5', 0.5, 'tid', false, null, 7], ['D5', 0.5, '-ings', false, null, 7], ['E5', 0.5, 'for', false, null, 7], ['D5', 0.5, 'Christ-', false, null, 7], 
                     ['C5', 0.5, 'mas', false, null, 7], ['A4', 0.5, 'and', false, null, 7], ['A4', 0.5, 'a', false, null, 7], ['G4', 0.5, 'hap-', false, null, 7], 
                     ['F4', 0.5, 'py', false, null, 8], ['E4', 0.5, 'New', true, { correct: 'New', choices: ['New', 'Next'], thai: 'ใหม่' }, 8], ['R', 1.0, 'Year!', false, null, 8], // โน้ตตัวดำ 1.0 **GAP 6**
                     ['G4', 2.0, 'We', false, null, 8], ['R', 2.0, '', false, null, 8], // โน้ตตัวขาว 2.0
-
-                    // --- BARS 17-22 (ส่วนที่ซ้ำและจบ)
-                    ['G4', 0.5, 'wish', true, { correct: 'wish', choices: ['wish', 'wash'], thai: 'ปรารถนา' }, 9], ['C5', 0.5, 'you', false, null, 9], ['D5', 0.5, 'a', false, null, 9], ['C5', 0.5, 'mer-', false, null, 9], // **GAP 7**
-                    ['B4', 0.5, 'ry', false, null, 9], ['A4', 0.5, 'Christ-', false, null, 9], ['G4', 0.5, 'mas,', false, null, 9], ['G4', 0.5, 'we', false, null, 9], 
-                    ['C5', 0.5, 'wish', false, null, 10], ['C5', 0.5, 'you', false, null, 10], ['D5', 0.5, 'a', false, null, 10], ['C5', 0.5, 'mer-', false, null, 10], 
+                    
+                    // --- Ending (เหมือนท่อนแรก แต่จบยาว)
+                    ['R', 0.5, 'we', false, null, 9], ['G4', 0.5, 'wish', true, { correct: 'wish', choices: ['wish', 'wash'], thai: 'ปรารถนา' }, 9], ['C5', 0.5, 'you', false, null, 9], ['D5', 0.5, 'a', false, null, 9], // **GAP 7**
+                    ['C5', 0.5, 'mer-', false, null, 9], ['B4', 0.5, 'ry', false, null, 9], ['A4', 0.5, 'Christ-', false, null, 9], ['G4', 0.5, 'mas,', false, null, 9], 
+                    ['R', 0.5, 'we', false, null, 10], ['G4', 0.5, 'wish', false, null, 10], ['C5', 0.5, 'you', false, null, 10], ['D5', 0.5, 'a', false, null, 10], ['C5', 0.5, 'mer-', false, null, 10], 
                     ['B4', 0.5, 'ry', false, null, 11], ['A4', 0.5, 'Christ-', true, { correct: 'Christ-', choices: ['Christ-', 'Cross-'], thai: 'คริสต์' }, 11], ['G4', 0.5, 'mas,', false, null, 11], ['E4', 0.5, 'we', false, null, 11], // **GAP 8**
                     ['E4', 0.5, 'wish', false, null, 12], ['F4', 0.5, 'you', true, { correct: 'you', choices: ['you', 'your'], thai: 'คุณ' }, 12], ['F4', 0.5, 'a', false, null, 12], ['G4', 0.5, 'mer-', false, null, 12], // **GAP 9**
-                    ['E4', 0.5, 'ry', false, null, 12], ['D4', 0.5, 'Christ-', false, null, 12], ['C4', 1.0, 'mas', false, null, 12], ['R', 0.5, 'and', false, null, 12], // โน้ตตัวดำ 1.0
-                    ['G4', 0.5, 'a', false, null, 13], ['G4', 0.5, 'hap-', false, null, 13], ['G4', 0.5, 'py', false, null, 13], ['A4', 1.0, 'New', false, null, 13], ['R', 0.5, 'Year!', true, { correct: 'Year!', choices: ['Year!', 'Here!'], thai: 'ปี' }, 13] // **GAP 10**
+                    ['E4', 0.5, 'ry', false, null, 12], ['D4', 0.5, 'Christ-', false, null, 12], ['C4', 4.0, 'mas', false, null, 12] // โน้ตจบยาว 4.0 (Whole Note)
                 ]
             }
         };
 
 
         // ----------------------------------------------------
-        // 2. ฟังก์ชันการเล่นเสียง (Play Note) - ไม่มีเปลี่ยนแปลง
+        // 2. ฟังก์ชันการเล่นเสียง (Play Note) - มีการปรับปรุง
         // ----------------------------------------------------
         
-        function playNote(frequency, startTime, duration) {
+        function playNote(frequency, startTime, duration, oscillatorType) {
             if (frequency === 0) return; 
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
-            oscillator.type = 'triangle'; 
+            
+            // ใช้ Type ที่กำหนดใน Song Data
+            oscillator.type = oscillatorType; 
+
             oscillator.frequency.setValueAtTime(frequency, startTime);
             const attackTime = 0.01;
-            const releaseTime = 0.1;
+            const releaseTime = 0.2; // เพิ่ม release time ให้เสียงนุ่มนวลขึ้น
+            
             gainNode.gain.setValueAtTime(0, startTime);
             gainNode.gain.linearRampToValueAtTime(0.5, startTime + attackTime); 
             gainNode.gain.linearRampToValueAtTime(0.5, startTime + duration - releaseTime);
             gainNode.gain.linearRampToValueAtTime(0, startTime + duration); 
+            
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
             oscillator.start(startTime);
@@ -648,7 +642,7 @@
         }
 
         // ----------------------------------------------------
-        // 5. ฟังก์ชันควบคุมการโหลดและเริ่มเกม - ไม่มีเปลี่ยนแปลง
+        // 5. ฟังก์ชันควบคุมการโหลดและเริ่มเกม - มีการปรับปรุง
         // ----------------------------------------------------
 
         function loadSongAndStartGame(songKey) {
@@ -716,11 +710,14 @@
                 showChoices(firstGapElement, choices, correct);
             }
 
+            const oscillatorType = currentSongData.oscillatorType || 'triangle'; // ดึงประเภทคลื่น
+
             currentSongData.data.forEach((data, index) => {
                 const frequency = noteFrequencies[data[0]];
                 const duration = data[1] * secondsPerBeat;
                 
-                playNote(frequency, currentTime, duration);
+                // ส่ง oscillatorType ไปใน playNote
+                playNote(frequency, currentTime, duration, oscillatorType);
                 
                 const delayMs = (currentTime - musicStartTime) * 1000;
                 updateLyrics(index, delayMs);
